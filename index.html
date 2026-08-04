@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Internal Live Translator & Notulen</title>
+    <!-- Fallback Aman untuk Library Word -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.js"></script>
+    <style>
+        :root {
+            --primary-color: #1a73e8;
+            --error-color: #d93025;
+            --success-color: #188038;
+            --warning-color: #f29900;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #202124;
+            --text-secondary: #5f6368;
+            --border-color: #dadce0;
+            --radius-xl: 28px;
+            --radius-m: 12px;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+            line-height: 1.5;
+        }
+
+        .app-card {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 480px;
+            border-radius: var(--radius-xl);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header { text-align: center; }
+        .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+        .header p { font-size: 13px; color: var(--text-secondary); }
+
+        .settings-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-left: 4px; }
+
+        select {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 14px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-m);
+            background-color: #fff;
+            outline: none;
+            cursor: pointer;
+        }
+        select:focus { border-color: var(--primary-color); }
+
+        .transcript-box {
+            background: #f1f3f4;
+            border-radius: var(--radius-m);
+            padding: 14px;
+            min-height: 130px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 13px;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .transcript-placeholder { color: var(--text-secondary); font-style: italic; text-align: center; margin: auto; }
+        .msg-container { background: #fff; padding: 10px 12px; border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .msg-time { font-size: 10px; color: var(--text-secondary); margin-bottom: 2px; font-weight: bold; }
+        .msg-original { color: #5f6368; font-size: 12px; margin-bottom: 2px; }
+        .msg-translated { color: var(--primary-color); font-weight: 600; font-size: 14px; }
+
+        .action-btn {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: var(--radius-m);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-start { background-color: var(--primary-color); color: white; }
+        .btn-start:hover { background-color: #1867ce; }
+        .btn-stop { background-color: var(--error-color); color: white; }
+        .btn-stop:hover { background-color: #c52c21; }
+        
+        .btn-mic { background-color: var(--warning-color); color: white; display: none; }
+        .btn-mic.muted { background-color: var(--error-color); }
+        .btn-mic:hover { opacity: 0.9; }
+
+        .btn-save { background-color: var(--success-color); color: white; margin-top: -6px; }
+        .btn-save:hover { background-color: #13652d; }
+
+        .status-indicator {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--success-color);
+            font-weight: 500;
+        }
+
+        .live-dot {
+            height: 8px; width: 8px;
+            background-color: var(--success-color);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(24, 128, 56, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(24, 128, 56, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(24, 128, 56, 0); }
+        }
+
+        .footer-note { text-align: center; font-size: 11px; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <div class="header">
+        <h1>Live Translator AI</h1>
+        <p>Auto-Detect & Smart Meeting Minutes</p>
+    </div>
+
+    <div class="settings-group">
+        <label>Target Terjemahan & Suara</label>
+        <select id="targetLang">
+            <option value="id">Bahasa Indonesia</option>
+            <option value="en">English</option>
+            <option value="zh">Chinese (Mandarin)</option>
+            <option value="ja">Japanese</option>
+            <option value="vi">Vietnamese</option>
+            <option value="th">Thai</option>
+        </select>
+    </div>
+
+    <div id="statusIndicator" class="status-indicator">
+        <span class="live-dot"></span>
+        <span id="statusText">Mendengarkan suara (Auto-Detect)...</span>
+    </div>
+    
+    <div id="transcriptBox" class="transcript-box">
+        <div class="transcript-placeholder">Tekan 'Start Translation' & mulai berbicara</div>
+    </div>
+
+    <button id="actionBtn" class="action-btn btn-start" onclick="toggleTranslation()">
+        <span id="btnText">Start Translation</span>
+    </button>
+
+    <button id="micBtn" class="action-btn btn-mic" onclick="toggleMicMute()">
+        <span id="micBtnText">🎤 Mute Mic</span>
+    </button>
+
+    <button id="saveBtn" class="action-btn btn-save" onclick="saveNotulenToWord()">
+        <span>Save Minutes (Word & Local)</span>
+    </button>
+
+    <p class="footer-note">Gunakan Headset untuk pengalaman terbaik Anda.</p>
+</div>
+
+<script>
+    let recognition;
+    let isRunning = false;
+    let shouldBeRunning = false; 
+    let isMuted = false; 
+    let chatHistory = []; 
+
+    const actionBtn = document.getElementById('actionBtn');
+    const btnText = document.getElementById('btnText');
+    const micBtn = document.getElementById('micBtn');
+    const micBtnText = document.getElementById('micBtnText');
+    const statusIndicator = document.getElementById('statusIndicator');
+    const statusText = document.getElementById('statusText');
+    const transcriptBox = document.getElementById('transcriptBox');
+    const targetLangSelect = document.getElementById('targetLang');
+
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!window.SpeechRecognition) {
+        alert("Browser Anda tidak mendukung Speech Recognition. Gunakan Google Chrome.");
+    }
+
+    function toggleTranslation() {
+        if (!isRunning) {
+            shouldBeRunning = true;
+            isMuted = false;
+            startListening();
+        } else {
+            shouldBeRunning = false;
+            stopListening();
+        }
+    }
+
+    function toggleMicMute() {
+        isMuted = !isMuted;
+        if (isMuted) {
+            if (recognition) {
+                try { recognition.stop(); } catch(e) {}
+            }
+            micBtn.className = "action-btn btn-mic muted";
+            micBtnText.textContent = "🔇 Unmute Mic";
+            statusText.textContent = "Mikrofon Dimatikan (Muted)";
+            statusIndicator.style.color = "var(--error-color)";
+        } else {
+            micBtn.className = "action-btn btn-mic";
+            micBtnText.textContent = "🎤 Mute Mic";
+            statusText.textContent = "Mendengarkan suara (Auto-Detect)...";
+            statusIndicator.style.color = "var(--success-color)";
+            if (shouldBeRunning) {
+                startListening();
+            }
+        }
+    }
+
+    function startListening() {
+        if (!window.SpeechRecognition || isMuted) return;
+
+        if (recognition) {
+            try { recognition.abort(); } catch(e) {}
+        }
+
+        recognition = new window.SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true; 
+        recognition.lang = 'id-ID'; 
+
+        recognition.onstart = () => {
+            isRunning = true;
+            btnText.textContent = "Stop Translation";
+            actionBtn.className = "action-btn btn-stop";
+            micBtn.style.display = 'flex';
+            statusIndicator.style.display = 'flex';
+            targetLangSelect.disabled = true;
+            if (transcriptBox.querySelector('.transcript-placeholder')) {
+                transcriptBox.innerHTML = '';
+            }
+        };
+
+        let currentMsgId = null;
+
+        recognition.onresult = async (event) => {
+            if (isMuted) return;
+
+            let interimText = '';
+            let finalText = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalText += event.results[i][0].transcript;
+                } else {
+                    interimText += event.results[i][0].transcript;
+                }
+            }
+
+            const speechText = (finalText || interimText).trim();
+            const targetLangCode = targetLangSelect.value;
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('id-ID');
+            
+            if (speechText !== "") {
+                if (!currentMsgId) {
+                    currentMsgId = appendTranscript(dateString, timeString, speechText, "Menerjemahkan...");
+                } else {
+                    updateTranscript(currentMsgId, dateString, timeString, speechText, "Menerjemahkan...", "auto", targetLangCode);
+                }
+
+                if (finalText) {
+                    try {
+                        const translationResult = await translateAuto(speechText, targetLangCode);
+                        
+                        updateTranscript(currentMsgId, dateString, timeString, speechText, translationResult.translated, translationResult.detectedSource, targetLangCode);
+                        
+                        chatHistory.push({
+                            date: dateString,
+                            time: timeString,
+                            original: speechText,
+                            sourceLang: translationResult.detectedSource,
+                            translated: translationResult.translated,
+                            targetLang: targetLangCode
+                        });
+
+                        localStorage.setItem('local_meeting_minutes', JSON.stringify(chatHistory));
+
+                        if (translationResult.detectedSource.toLowerCase() !== targetLangCode.toLowerCase()) {
+                            speakText(translationResult.translated, targetLangCode);
+                        }
+                    } catch (err) {
+                        console.error("Error Terjemahan:", err);
+                        updateTranscript(currentMsgId, dateString, timeString, speechText, "[Gagal menerjemahkan]", "auto", targetLangCode);
+                    }
+                    currentMsgId = null; 
+                }
+            }
+        };
+
+        recognition.onerror = (event) => {
+            console.warn("Speech recognition warning/error:", event.error);
+        };
+
+        recognition.onend = () => {
+            isRunning = false;
+            if (shouldBeRunning && !isMuted) {
+                setTimeout(() => {
+                    try {
+                        startListening();
+                    } catch (e) {
+                        console.error("Gagal menyalakan ulang mic:", e);
+                    }
+                }, 50);
+            } else if (!isMuted) {
+                statusIndicator.style.display = 'none';
+            }
+        };
+
+        try {
+            recognition.start();
+        } catch(e) {
+            console.error("Gagal start recognition:", e);
+        }
+    }
+
+    function stopListening() {
+        shouldBeRunning = false;
+        isRunning = false;
+        isMuted = false;
+        if (recognition) {
+            try { recognition.stop(); } catch(e) {}
+        }
+        btnText.textContent = "Start Translation";
+        actionBtn.className = "action-btn btn-start";
+        micBtn.style.display = 'none';
+        micBtn.className = "action-btn btn-mic";
+        micBtnText.textContent = "🎤 Mute Mic";
+        statusIndicator.style.display = 'none';
+        targetLangSelect.disabled = false;
+    }
+
+    async function translateAuto(text, targetLang) {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        let translated = "";
+        if (data && data[0]) {
+            for (let i = 0; i < data[0].length; i++) {
+                if (data[0][i][0]) {
+                    translated += data[0][i][0];
+                }
+            }
+        }
+        
+        let detectedSource = data[2] || "auto";
+        return {
+            translated: translated.trim(),
+            detectedSource: detectedSource
+        };
+    }
+
+    let counter = 0;
+    function appendTranscript(date, time, original, translated) {
+        counter++;
+        const id = `msg-${counter}`;
+        const div = document.createElement('div');
+        div.className = 'msg-container';
+        div.id = id;
+        div.innerHTML = `
+            <div class="msg-time">📅 ${date} | ⏰ ${time}</div>
+            <div class="msg-original">🗣️ [Auto] "${original}"</div>
+            <div class="msg-translated">🔄 ${translated}</div>
+        `;
+        transcriptBox.appendChild(div);
+        transcriptBox.scrollTop = transcriptBox.scrollHeight;
+        return id;
+    }
+
+    function updateTranscript(id, date, time, original, translated, sourceLang, targetLang) {
+        const div = document.getElementById(id);
+        if (div) {
+            let noteInfo = (sourceLang && sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Bahasa sama - Teks Saja)" : "";
+            div.innerHTML = `
+                <div class="msg-time">📅 ${date} | ⏰ ${time} ${sourceLang ? '[Deteksi: ' + sourceLang.toUpperCase() + ']' : ''}</div>
+                <div class="msg-original">🗣️ "${original}"</div>
+                <div class="msg-translated">🔄 ${translated}${noteInfo}</div>
+            `;
+            transcriptBox.scrollTop = transcriptBox.scrollHeight;
+        }
+    }
+
+    function speakText(text, langCode) {
+        if (!('speechSynthesis' in window)) return;
+        
+        const langMap = {
+            'id': 'id-ID',
+            'en': 'en-US',
+            'ja': 'ja-JP',
+            'zh': 'zh-CN',
+            'vi': 'vi-VN',
+            'th': 'th-TH'
+        };
+
+        const bcp47 = langMap[langCode] || 'en-US';
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = bcp47;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function saveNotulenToWord() {
+        if (chatHistory.length === 0) {
+            const savedLocal = localStorage.getItem('local_meeting_minutes');
+            if (savedLocal) {
+                chatHistory = JSON.parse(savedLocal);
+            }
+        }
+
+        if (chatHistory.length === 0) {
+            alert("Belum ada riwayat percakapan untuk disimpan!");
+            return;
+        }
+
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hour = String(now.getHours()).padStart(2, '0');
+        const minute = String(now.getMinutes()).padStart(2, '0');
+        
+        const fileName = `Notulen-resume-${year}${month}${day}-${hour}${minute}.docx`;
+
+        let htmlContent = `
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+            <head><meta charset='utf-8'><title>Notulen Meeting AI</title></head>
+            <body style="font-family: Arial, sans-serif;">
+                <h2 style="color: #1a73e8; text-align: center;">NOTULEN RESUME RAPAT & TERJEMAHAN LIVE AI</h2>
+                <p style="text-align: center; color: #5f6368;">Tanggal Generate: ${day}-${month}-${year} Pukul ${hour}:${minute}</p>
+                <hr style="border: 1px solid #dadce0; margin-bottom: 20px;">
+        `;
+
+        chatHistory.forEach((item, index) => {
+            htmlContent += `
+                <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #e0e0e0; background-color: #f9f9f9;">
+                    <p style="font-size: 11px; color: #5f6368; margin: 0 0 4px 0;"><b>[${index + 1}] Waktu:</b> ${item.date} ${item.time} | <b>Deteksi Bahasa:</b> ${item.sourceLang ? item.sourceLang.toUpperCase() : 'AUTO'}</p>
+                    <p style="font-size: 13px; margin: 0 0 4px 0;"><b>Ucapan Asli:</b> "${item.original}"</p>
+                    <p style="font-size: 14px; color: #1a73e8; margin: 0; font-weight: bold;"><b>Terjemahan Target (${item.targetLang.toUpperCase()}):</b> ${item.translated}</p>
+                </div>
+            `;
+        });
+
+        htmlContent += `</body></html>`;
+
+        localStorage.setItem('local_meeting_minutes', JSON.stringify(chatHistory));
+
+        if (typeof htmlDocx !== 'undefined' && htmlDocx.asBlob) {
+            const converted = htmlDocx.asBlob(htmlContent);
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(converted);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            alert("Notulen berhasil disimpan ke localStorage & diunduh ke file Word!");
+        } else {
+            // Fallback aman jika library Word gagal dimuat di Live Server
+            alert("Data berhasil disimpan ke LocalStorage browser! (Format Word dilewati karena library belum siap).");
+        }
+    }
+</script>
+
+</body>
+</html>
