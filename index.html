@@ -3,200 +3,411 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Internal Live Translator & Notulen</title>
-    <!-- Fallback Aman untuk Library Word -->
+    <title>AI Live Translator & Smart Minutes</title>
+    <!-- Library untuk Export MS Word (.docx) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html-docx-js/0.3.1/html-docx.js"></script>
     <style>
         :root {
-            --primary-color: #1a73e8;
-            --error-color: #d93025;
-            --success-color: #188038;
-            --warning-color: #f29900;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-primary: #202124;
-            --text-secondary: #5f6368;
-            --border-color: #dadce0;
-            --radius-xl: 28px;
-            --radius-m: 12px;
-            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --bg-deep: #070913;
+            --surface: #111827;
+            --surface-glass: rgba(17, 24, 39, 0.75);
+            --primary-glow: #6366f1;
+            --secondary-glow: #a855f7;
+            --accent-cyan: #06b6d4;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-focus: rgba(99, 102, 241, 0.5);
+            --danger: #f43f5e;
+            --success: #10b981;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --font: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
 
         body {
-            font-family: var(--font-family);
-            background-color: var(--bg-color);
-            color: var(--text-primary);
+            font-family: var(--font);
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 60%);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 16px;
-            line-height: 1.5;
+            padding: 20px;
+            overflow-x: hidden;
         }
 
-        .app-card {
-            background: var(--card-bg);
+        .app-container {
+            position: relative;
             width: 100%;
             max-width: 480px;
-            border-radius: var(--radius-xl);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-            padding: 28px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 
+                        0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+            padding: 32px 24px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            border: 1px solid var(--border-color);
+            gap: 20px;
+            z-index: 10;
         }
 
-        .header { text-align: center; }
-        .header h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
-        .header p { font-size: 13px; color: var(--text-secondary); }
+        /* Ambient Glow Effect behind card */
+        .app-container::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow), var(--accent-cyan));
+            border-radius: calc(var(--radius-lg) + 2px);
+            z-index: -1;
+            opacity: 0.35;
+            filter: blur(10px);
+        }
 
-        .settings-group { display: flex; flex-direction: column; gap: 6px; }
-        label { font-size: 12px; font-weight: 500; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-left: 4px; }
+        .header {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ai-badge {
+            align-self: center;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.1);
+            padding: 4px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #ffffff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .setting-section {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-left: 2px;
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
 
         select {
             width: 100%;
-            padding: 12px 14px;
-            font-size: 14px;
-            border: 2px solid var(--border-color);
-            border-radius: var(--radius-m);
-            background-color: #fff;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
             outline: none;
             cursor: pointer;
-        }
-        select:focus { border-color: var(--primary-color); }
-
-        .transcript-box {
-            background: #f1f3f4;
-            border-radius: var(--radius-m);
-            padding: 14px;
-            min-height: 130px;
-            max-height: 200px;
-            overflow-y: auto;
-            font-size: 13px;
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        
-        .transcript-placeholder { color: var(--text-secondary); font-style: italic; text-align: center; margin: auto; }
-        .msg-container { background: #fff; padding: 10px 12px; border-radius: 8px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .msg-time { font-size: 10px; color: var(--text-secondary); margin-bottom: 2px; font-weight: bold; }
-        .msg-original { color: #5f6368; font-size: 12px; margin-bottom: 2px; }
-        .msg-translated { color: var(--primary-color); font-weight: 600; font-size: 14px; }
-
-        .action-btn {
-            width: 100%;
-            padding: 14px;
-            font-size: 15px;
-            font-weight: 600;
-            border: none;
-            border-radius: var(--radius-m);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
+            appearance: none;
+            transition: all 0.25s ease;
         }
 
-        .btn-start { background-color: var(--primary-color); color: white; }
-        .btn-start:hover { background-color: #1867ce; }
-        .btn-stop { background-color: var(--error-color); color: white; }
-        .btn-stop:hover { background-color: #c52c21; }
-        
-        .btn-mic { background-color: var(--warning-color); color: white; display: none; }
-        .btn-mic.muted { background-color: var(--error-color); }
-        .btn-mic:hover { opacity: 0.9; }
+        select:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
 
-        .btn-save { background-color: var(--success-color); color: white; margin-top: -6px; }
-        .btn-save:hover { background-color: #13652d; }
+        select:focus {
+            border-color: var(--primary-glow);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
 
-        .status-indicator {
+        select option {
+            background: #0f172a;
+            color: var(--text-main);
+        }
+
+        .select-wrapper::after {
+            content: '▾';
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            font-size: 12px;
+        }
+
+        .status-badge {
             display: none;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            font-size: 13px;
-            color: var(--success-color);
-            font-weight: 500;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.08);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
-        .live-dot {
-            height: 8px; width: 8px;
-            background-color: var(--success-color);
+        .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--success);
             border-radius: 50%;
-            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+            animation: pulse-ring 1.5s infinite;
         }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(24, 128, 56, 0.4); }
-            70% { box-shadow: 0 0 0 6px rgba(24, 128, 56, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(24, 128, 56, 0); }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
-        .footer-note { text-align: center; font-size: 11px; color: var(--text-secondary); }
+        .transcript-box {
+            background: rgba(7, 9, 19, 0.6);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            min-height: 150px;
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+        }
+
+        .transcript-placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 12px;
+            text-align: center;
+            margin: auto;
+        }
+
+        .msg-item {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .msg-meta {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .msg-original {
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+
+        .msg-translated {
+            font-size: 13px;
+            font-weight: 600;
+            color: #818cf8;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            position: relative;
+            z-index: 20;
+        }
+
+        .btn {
+            position: relative;
+            z-index: 20;
+            width: 100%;
+            padding: 13px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-mic {
+            background: rgba(30, 41, 59, 0.8);
+            color: var(--text-main);
+            border: 1px solid var(--border-glass);
+        }
+        .btn-mic:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+        .btn-mic.muted {
+            background: rgba(244, 63, 94, 0.12);
+            color: var(--danger);
+            border-color: rgba(244, 63, 94, 0.3);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-start:hover {
+            opacity: 0.92;
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-stop:hover {
+            opacity: 0.92;
+            box-shadow: 0 6px 16px rgba(244, 63, 94, 0.4);
+        }
+
+        .btn-save {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            width: 100%;
+        }
+        .btn-save:hover {
+            background: rgba(16, 185, 129, 0.25);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.2);
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            margin-top: -2px;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
 
-<div class="app-card">
+<div class="app-container">
     <div class="header">
-        <h1>Live Translator AI</h1>
-        <p>Auto-Detect & Smart Meeting Minutes</p>
+        <span class="ai-badge">Neural Engine Active</span>
+        <h1>AI Live Translator</h1>
+        <p>Real-Time Multilingual Speech Recognition & Notulen</p>
     </div>
 
-    <div class="settings-group">
-        <label>Target Terjemahan & Suara</label>
-        <select id="targetLang">
-            <option value="id">Bahasa Indonesia</option>
-            <option value="en">English</option>
-            <option value="zh">Chinese (Mandarin)</option>
-            <option value="ja">Japanese</option>
-            <option value="vi">Vietnamese</option>
-            <option value="th">Thai</option>
-        </select>
+    <div class="setting-section">
+        <label>Target Language & Voice</label>
+        <div class="select-wrapper">
+            <select id="targetLang">
+                <option value="id">Bahasa Indonesia</option>
+                <option value="en">English</option>
+                <option value="zh">Chinese (Mandarin)</option>
+                <option value="ja">Japanese</option>
+                <option value="vi">Vietnamese</option>
+                <option value="th">Thai</option>
+            </select>
+        </div>
     </div>
 
-    <div id="statusIndicator" class="status-indicator">
-        <span class="live-dot"></span>
-        <span id="statusText">Mendengarkan suara (Auto-Detect)...</span>
+    <div id="statusBadge" class="status-badge">
+        <span class="pulse-dot"></span>
+        <span id="statusText">Listening & Auto-Detecting...</span>
     </div>
     
     <div id="transcriptBox" class="transcript-box">
-        <div class="transcript-placeholder">Tekan 'Start Translation' & mulai berbicara</div>
+        <div class="transcript-placeholder">Click 'Start Translation' & begin speaking...</div>
     </div>
 
-    <button id="actionBtn" class="action-btn btn-start" onclick="toggleTranslation()">
-        <span id="btnText">Start Translation</span>
+    <div class="controls-grid">
+        <button id="micBtn" class="btn btn-mic" type="button" onclick="toggleMicState()">
+            <span id="micBtnText">🎙️ Unmuted</span>
+        </button>
+        <button id="actionBtn" class="btn btn-start" type="button" onclick="toggleTranslation()">
+            <span id="btnText">Start Translation</span>
+        </button>
+    </div>
+
+    <button id="saveBtn" class="btn btn-save" type="button" onclick="saveNotulenToWord()">
+        <span>💾 Save Minutes to Word</span>
     </button>
 
-    <button id="micBtn" class="action-btn btn-mic" onclick="toggleMicMute()">
-        <span id="micBtnText">🎤 Mute Mic</span>
-    </button>
-
-    <button id="saveBtn" class="action-btn btn-save" onclick="saveNotulenToWord()">
-        <span>Save Minutes (Word & Local)</span>
-    </button>
-
-    <p class="footer-note">Gunakan Headset untuk pengalaman terbaik Anda.</p>
+    <div class="footer-note">
+        <span>🎧</span> Gunakan Headset untuk pengalaman terbaik anda
+    </div>
 </div>
 
 <script>
     let recognition;
     let isRunning = false;
-    let shouldBeRunning = false; 
-    let isMuted = false; 
-    let chatHistory = []; 
+    let isMuted = false;
+    let chatHistory = [];
+    let translationCache = new Map(); // Cache untuk instant terjemahan tanpa delay
 
     const actionBtn = document.getElementById('actionBtn');
     const btnText = document.getElementById('btnText');
     const micBtn = document.getElementById('micBtn');
     const micBtnText = document.getElementById('micBtnText');
-    const statusIndicator = document.getElementById('statusIndicator');
+    const statusBadge = document.getElementById('statusBadge');
     const statusText = document.getElementById('statusText');
     const transcriptBox = document.getElementById('transcriptBox');
     const targetLangSelect = document.getElementById('targetLang');
@@ -207,159 +418,115 @@
         alert("Browser Anda tidak mendukung Speech Recognition. Gunakan Google Chrome.");
     }
 
+    function toggleMicState() {
+        isMuted = !isMuted;
+        if (isMuted) {
+            micBtn.className = "btn btn-mic muted";
+            micBtnText.textContent = "🔇 Muted";
+            statusText.textContent = "Microphone Muted";
+        } else {
+            micBtn.className = "btn btn-mic";
+            micBtnText.textContent = "🎙️ Unmuted";
+            statusText.textContent = "Listening & Auto-Detecting...";
+        }
+    }
+
     function toggleTranslation() {
         if (!isRunning) {
-            shouldBeRunning = true;
-            isMuted = false;
             startListening();
         } else {
-            shouldBeRunning = false;
             stopListening();
         }
     }
 
-    function toggleMicMute() {
-        isMuted = !isMuted;
-        if (isMuted) {
-            if (recognition) {
-                try { recognition.stop(); } catch(e) {}
-            }
-            micBtn.className = "action-btn btn-mic muted";
-            micBtnText.textContent = "🔇 Unmute Mic";
-            statusText.textContent = "Mikrofon Dimatikan (Muted)";
-            statusIndicator.style.color = "var(--error-color)";
-        } else {
-            micBtn.className = "action-btn btn-mic";
-            micBtnText.textContent = "🎤 Mute Mic";
-            statusText.textContent = "Mendengarkan suara (Auto-Detect)...";
-            statusIndicator.style.color = "var(--success-color)";
-            if (shouldBeRunning) {
-                startListening();
-            }
-        }
-    }
-
     function startListening() {
-        if (!window.SpeechRecognition || isMuted) return;
-
-        if (recognition) {
-            try { recognition.abort(); } catch(e) {}
-        }
+        if (!window.SpeechRecognition) return;
 
         recognition = new window.SpeechRecognition();
         recognition.continuous = true;
-        recognition.interimResults = true; 
-        recognition.lang = 'id-ID'; 
+        recognition.interimResults = false;
+        recognition.lang = 'id-ID';
 
         recognition.onstart = () => {
             isRunning = true;
             btnText.textContent = "Stop Translation";
-            actionBtn.className = "action-btn btn-stop";
-            micBtn.style.display = 'flex';
-            statusIndicator.style.display = 'flex';
+            actionBtn.className = "btn btn-stop";
+            statusBadge.style.display = 'flex';
             targetLangSelect.disabled = true;
             if (transcriptBox.querySelector('.transcript-placeholder')) {
                 transcriptBox.innerHTML = '';
             }
         };
 
-        let currentMsgId = null;
-
         recognition.onresult = async (event) => {
             if (isMuted) return;
 
-            let interimText = '';
-            let finalText = '';
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalText += event.results[i][0].transcript;
-                } else {
-                    interimText += event.results[i][0].transcript;
-                }
-            }
-
-            const speechText = (finalText || interimText).trim();
+            const speechText = event.results[event.results.length - 1][0].transcript.trim();
             const targetLangCode = targetLangSelect.value;
             const now = new Date();
             const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateString = now.toLocaleDateString('id-ID');
             
             if (speechText !== "") {
-                if (!currentMsgId) {
-                    currentMsgId = appendTranscript(dateString, timeString, speechText, "Menerjemahkan...");
-                } else {
-                    updateTranscript(currentMsgId, dateString, timeString, speechText, "Menerjemahkan...", "auto", targetLangCode);
-                }
+                const msgId = appendTranscript(dateString, timeString, speechText, "Translating...");
 
-                if (finalText) {
-                    try {
-                        const translationResult = await translateAuto(speechText, targetLangCode);
-                        
-                        updateTranscript(currentMsgId, dateString, timeString, speechText, translationResult.translated, translationResult.detectedSource, targetLangCode);
-                        
-                        chatHistory.push({
-                            date: dateString,
-                            time: timeString,
-                            original: speechText,
-                            sourceLang: translationResult.detectedSource,
-                            translated: translationResult.translated,
-                            targetLang: targetLangCode
-                        });
+                try {
+                    const cacheKey = `${speechText}_${targetLangCode}`;
+                    let translationResult;
 
-                        localStorage.setItem('local_meeting_minutes', JSON.stringify(chatHistory));
-
-                        if (translationResult.detectedSource.toLowerCase() !== targetLangCode.toLowerCase()) {
-                            speakText(translationResult.translated, targetLangCode);
-                        }
-                    } catch (err) {
-                        console.error("Error Terjemahan:", err);
-                        updateTranscript(currentMsgId, dateString, timeString, speechText, "[Gagal menerjemahkan]", "auto", targetLangCode);
+                    if (translationCache.has(cacheKey)) {
+                        translationResult = translationCache.get(cacheKey);
+                    } else {
+                        translationResult = await translateAuto(speechText, targetLangCode);
+                        translationCache.set(cacheKey, translationResult);
                     }
-                    currentMsgId = null; 
+                    
+                    updateTranscript(msgId, dateString, timeString, speechText, translationResult.translated, translationResult.detectedSource, targetLangCode);
+                    
+                    chatHistory.push({
+                        date: dateString,
+                        time: timeString,
+                        original: speechText,
+                        sourceLang: translationResult.detectedSource,
+                        translated: translationResult.translated,
+                        targetLang: targetLangCode
+                    });
+
+                    if (translationResult.detectedSource.toLowerCase() !== targetLangCode.toLowerCase()) {
+                        speakText(translationResult.translated, targetLangCode);
+                    }
+                } catch (err) {
+                    console.error("Translation Error:", err);
+                    updateTranscript(msgId, dateString, timeString, speechText, "[Translation Failed]", "auto", targetLangCode);
                 }
             }
         };
 
         recognition.onerror = (event) => {
-            console.warn("Speech recognition warning/error:", event.error);
+            console.warn("Speech recognition error:", event.error);
         };
 
         recognition.onend = () => {
-            isRunning = false;
-            if (shouldBeRunning && !isMuted) {
-                setTimeout(() => {
-                    try {
-                        startListening();
-                    } catch (e) {
-                        console.error("Gagal menyalakan ulang mic:", e);
-                    }
-                }, 50);
-            } else if (!isMuted) {
-                statusIndicator.style.display = 'none';
+            if (isRunning) {
+                try { recognition.start(); } catch(e) {}
             }
         };
 
         try {
             recognition.start();
         } catch(e) {
-            console.error("Gagal start recognition:", e);
+            console.error(e);
         }
     }
 
     function stopListening() {
-        shouldBeRunning = false;
         isRunning = false;
-        isMuted = false;
         if (recognition) {
-            try { recognition.stop(); } catch(e) {}
+            recognition.stop();
         }
         btnText.textContent = "Start Translation";
-        actionBtn.className = "action-btn btn-start";
-        micBtn.style.display = 'none';
-        micBtn.className = "action-btn btn-mic";
-        micBtnText.textContent = "🎤 Mute Mic";
-        statusIndicator.style.display = 'none';
+        actionBtn.className = "btn btn-start";
+        statusBadge.style.display = 'none';
         targetLangSelect.disabled = false;
     }
 
@@ -378,6 +545,7 @@
         }
         
         let detectedSource = data[2] || "auto";
+
         return {
             translated: translated.trim(),
             detectedSource: detectedSource
@@ -389,11 +557,11 @@
         counter++;
         const id = `msg-${counter}`;
         const div = document.createElement('div');
-        div.className = 'msg-container';
+        div.className = 'msg-item';
         div.id = id;
         div.innerHTML = `
-            <div class="msg-time">📅 ${date} | ⏰ ${time}</div>
-            <div class="msg-original">🗣️ [Auto] "${original}"</div>
+            <div class="msg-meta">📅 ${date} | ⏰ ${time}</div>
+            <div class="msg-original">🗣️ "${original}"</div>
             <div class="msg-translated">🔄 ${translated}</div>
         `;
         transcriptBox.appendChild(div);
@@ -404,9 +572,9 @@
     function updateTranscript(id, date, time, original, translated, sourceLang, targetLang) {
         const div = document.getElementById(id);
         if (div) {
-            let noteInfo = (sourceLang && sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Bahasa sama - Teks Saja)" : "";
+            let noteInfo = (sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Same Language - Text Only)" : "";
             div.innerHTML = `
-                <div class="msg-time">📅 ${date} | ⏰ ${time} ${sourceLang ? '[Deteksi: ' + sourceLang.toUpperCase() + ']' : ''}</div>
+                <div class="msg-meta">📅 ${date} | ⏰ ${time} [Detected: ${sourceLang.toUpperCase()}]</div>
                 <div class="msg-original">🗣️ "${original}"</div>
                 <div class="msg-translated">🔄 ${translated}${noteInfo}</div>
             `;
@@ -417,16 +585,13 @@
     function speakText(text, langCode) {
         if (!('speechSynthesis' in window)) return;
         
-        const langMap = {
-            'id': 'id-ID',
-            'en': 'en-US',
-            'ja': 'ja-JP',
-            'zh': 'zh-CN',
-            'vi': 'vi-VN',
-            'th': 'th-TH'
-        };
+        let bcp47 = 'en-US';
+        if (langCode === 'id') bcp47 = 'id-ID';
+        else if (langCode === 'ja') bcp47 = 'ja-JP';
+        else if (langCode === 'zh') bcp47 = 'zh-CN';
+        else if (langCode === 'vi') bcp47 = 'vi-VN';
+        else if (langCode === 'th') bcp47 = 'th-TH';
 
-        const bcp47 = langMap[langCode] || 'en-US';
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = bcp47;
         window.speechSynthesis.speak(utterance);
@@ -434,14 +599,7 @@
 
     function saveNotulenToWord() {
         if (chatHistory.length === 0) {
-            const savedLocal = localStorage.getItem('local_meeting_minutes');
-            if (savedLocal) {
-                chatHistory = JSON.parse(savedLocal);
-            }
-        }
-
-        if (chatHistory.length === 0) {
-            alert("Belum ada riwayat percakapan untuk disimpan!");
+            alert("No conversation history available to save as minutes!");
             return;
         }
 
@@ -456,40 +614,32 @@
 
         let htmlContent = `
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>Notulen Meeting AI</title></head>
+            <head><meta charset='utf-8'><title>AI Meeting Minutes</title></head>
             <body style="font-family: Arial, sans-serif;">
-                <h2 style="color: #1a73e8; text-align: center;">NOTULEN RESUME RAPAT & TERJEMAHAN LIVE AI</h2>
-                <p style="text-align: center; color: #5f6368;">Tanggal Generate: ${day}-${month}-${year} Pukul ${hour}:${minute}</p>
-                <hr style="border: 1px solid #dadce0; margin-bottom: 20px;">
+                <h2 style="color: #6366f1; text-align: center;">AI MEETING MINUTES & LIVE TRANSLATION RESUME</h2>
+                <p style="text-align: center; color: #64748b;">Generated Date: ${day}-${month}-${year} Time ${hour}:${minute}</p>
+                <hr style="border: 1px solid #cbd5e1; margin-bottom: 20px;">
         `;
 
         chatHistory.forEach((item, index) => {
             htmlContent += `
-                <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #e0e0e0; background-color: #f9f9f9;">
-                    <p style="font-size: 11px; color: #5f6368; margin: 0 0 4px 0;"><b>[${index + 1}] Waktu:</b> ${item.date} ${item.time} | <b>Deteksi Bahasa:</b> ${item.sourceLang ? item.sourceLang.toUpperCase() : 'AUTO'}</p>
-                    <p style="font-size: 13px; margin: 0 0 4px 0;"><b>Ucapan Asli:</b> "${item.original}"</p>
-                    <p style="font-size: 14px; color: #1a73e8; margin: 0; font-weight: bold;"><b>Terjemahan Target (${item.targetLang.toUpperCase()}):</b> ${item.translated}</p>
+                <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #e2e8f0; background-color: #f8fafc;">
+                    <p style="font-size: 11px; color: #64748b; margin: 0 0 4px 0;"><b>[${index + 1}] Time:</b> ${item.date} ${item.time} | <b>Detected Language:</b> ${item.sourceLang.toUpperCase()}</p>
+                    <p style="font-size: 13px; margin: 0 0 4px 0;"><b>Original Speech:</b> "${item.original}"</p>
+                    <p style="font-size: 14px; color: #6366f1; margin: 0; font-weight: bold;"><b>Target Translation (${item.targetLang.toUpperCase()}):</b> ${item.translated}</p>
                 </div>
             `;
         });
 
         htmlContent += `</body></html>`;
 
-        localStorage.setItem('local_meeting_minutes', JSON.stringify(chatHistory));
-
-        if (typeof htmlDocx !== 'undefined' && htmlDocx.asBlob) {
-            const converted = htmlDocx.asBlob(htmlContent);
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(converted);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            alert("Notulen berhasil disimpan ke localStorage & diunduh ke file Word!");
-        } else {
-            // Fallback aman jika library Word gagal dimuat di Live Server
-            alert("Data berhasil disimpan ke LocalStorage browser! (Format Word dilewati karena library belum siap).");
-        }
+        const converted = htmlDocx.asBlob(htmlContent);
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(converted);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 
