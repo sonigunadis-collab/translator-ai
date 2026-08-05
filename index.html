@@ -313,7 +313,7 @@
     <div class="header">
         <span class="ai-badge">GLOBAL MOBILITY AI SYSTEM ENGAGED</span>
         <h1>Toyota Voice Intelligence</h1>
-        <p>Real-Time Multilingual Speech Recognition & Smart Transcription</p>
+        <p>Real-Time Multilingual Speech Recognition & Cloud Meeting Sync</p>
     </div>
 
     <div class="settings-grid">
@@ -331,7 +331,7 @@
             </div>
         </div>
         <div class="setting-section">
-            <label>Translate To</label>
+            <label>Translate To (This Device)</label>
             <div class="select-wrapper">
                 <select id="targetLang">
                     <option value="id" selected>Bahasa Indonesia</option>
@@ -347,11 +347,11 @@
 
     <div id="statusBadge" class="status-badge">
         <span class="pulse-dot"></span>
-        <span id="statusText">Listening...</span>
+        <span id="statusText">Listening & Broadcasting...</span>
     </div>
     
     <div id="transcriptBox" class="transcript-box">
-        <div class="transcript-placeholder">Select your target language, click 'Start Translation' to start speaking...</div>
+        <div class="transcript-placeholder">Select your target language, click 'Start Translation' to start meeting room sync...</div>
     </div>
 
     <div class="controls-grid">
@@ -374,18 +374,39 @@
     </button>
 
     <div class="footer-note">
-        <span>🎧</span> Use a HEADSET for the best experience!
+        <span>🎧☁️</span> Cloud Meeting Room Sync Enabled (Firebase)
     </div>
 </div>
 
+<!-- Firebase SDK Compat -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <script>
+    // 🔑 KONFIGURASI FIREBASE ANDA
+    const firebaseConfig = {
+        apiKey: "AIzaSyBbgNfLv-sclwDUdbW9SJyKoIhMr1-BT_s",
+        authDomain: "ai-translator-meeting.firebaseapp.com",
+        databaseURL: "https://ai-translator-meeting-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "ai-translator-meeting",
+        storageBucket: "ai-translator-meeting.firebasestorage.app",
+        messagingSenderId: "929624500219",
+        appId: "1:929624500219:web:35a13a87bd364a6dc04d5e",
+        measurementId: "G-MYZW465XSF"
+    };
+
+    // Inisialisasi Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const roomRef = db.ref('meeting_rooms/toyota_room_utama');
+
     let recognition;
     let isRunning = false;
     let isMuted = false;
     let chatHistory = [];
     let translationCache = new Map();
 
-    // 🔑 ATUR PASSWORD OWNER ANDA DI SINI (Ubah sesuai keinginan)
+    // 🔑 ATUR PASSWORD OWNER ANDA DI SINI
     const OWNER_PASSWORD = "Toyota2026";
 
     const actionBtn = document.getElementById('actionBtn');
@@ -404,6 +425,53 @@
     if (!window.SpeechRecognition) {
         alert("Browser Anda tidak mendukung Speech Recognition. Gunakan Google Chrome.");
     }
+
+    // Mendengarkan pesan masuk dari Cloud Firebase Realtime Database untuk semua peserta meeting
+    roomRef.limitToLast(30).on('child_added', async (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        const targetLangCode = targetLangSelect.value;
+        const sourceLangCode = data.sourceLang; // misal: 'ja'
+        let translatedText = data.original;
+
+        if (transcriptBox.querySelector('.transcript-placeholder')) {
+            transcriptBox.innerHTML = '';
+        }
+
+        // Buat elemen penampung terlebih dahulu dengan status "Translating..."
+        const msgId = appendOrUpdateLiveChat(data.id, data.date, data.time, data.original, "Translating...", sourceLangCode, targetLangCode);
+
+        try {
+            const cacheKey = `${data.original}_${sourceLangCode}_${targetLangCode}`;
+
+            if (translationCache.has(cacheKey)) {
+                translatedText = translationCache.get(cacheKey);
+            } else {
+                translatedText = await translateText(data.original, sourceLangCode, targetLangCode);
+                translationCache.set(cacheKey, translatedText);
+            }
+            
+            updateLiveChat(msgId, data.date, data.time, data.original, translatedText, sourceLangCode, targetLangCode);
+            
+            // Simpan ke history lokal device ini untuk siap diexport ke Word
+            chatHistory.push({
+                date: data.date,
+                time: data.time,
+                original: data.original,
+                sourceLang: sourceLangCode,
+                translated: translatedText,
+                targetLang: targetLangCode
+            });
+
+            if (sourceLangCode.toLowerCase() !== targetLangCode.toLowerCase()) {
+                speakText(translatedText, targetLangCode);
+            }
+        } catch (err) {
+            console.error("Translation Error:", err);
+            updateLiveChat(msgId, data.date, data.time, data.original, "[Translation Failed]", sourceLangCode, targetLangCode);
+        }
+    });
 
     // Fungsi untuk membuka akses Save dengan memasukkan Password
     function verifyOwner() {
@@ -425,7 +493,7 @@
         } else {
             micBtn.className = "btn btn-mic";
             micBtnText.textContent = "🎙️ Unmuted";
-            statusText.textContent = "Listening...";
+            statusText.textContent = "Listening & Broadcasting...";
         }
     }
 
@@ -450,7 +518,6 @@
             btnText.textContent = "Stop Translation";
             actionBtn.className = "btn btn-stop";
             statusBadge.style.display = 'flex';
-            targetLangSelect.disabled = true;
             sourceLangSelect.disabled = true;
             if (transcriptBox.querySelector('.transcript-placeholder')) {
                 transcriptBox.innerHTML = '';
@@ -461,44 +528,22 @@
             if (isMuted) return;
 
             const speechText = event.results[event.results.length - 1][0].transcript.trim();
-            const targetLangCode = targetLangSelect.value;
             const sourceLangCode = sourceLangSelect.value.split('-')[0];
             const now = new Date();
             const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             const dateString = now.toLocaleDateString('id-ID');
+            const uniqueId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
             
             if (speechText !== "") {
-                const msgId = appendTranscript(dateString, timeString, speechText, "Translating...");
-
-                try {
-                    const cacheKey = `${speechText}_${sourceLangCode}_${targetLangCode}`;
-                    let translatedText;
-
-                    if (translationCache.has(cacheKey)) {
-                        translatedText = translationCache.get(cacheKey);
-                    } else {
-                        translatedText = await translateText(speechText, sourceLangCode, targetLangCode);
-                        translationCache.set(cacheKey, translatedText);
-                    }
-                    
-                    updateTranscript(msgId, dateString, timeString, speechText, translatedText, sourceLangCode, targetLangCode);
-                    
-                    chatHistory.push({
-                        date: dateString,
-                        time: timeString,
-                        original: speechText,
-                        sourceLang: sourceLangCode,
-                        translated: translatedText,
-                        targetLang: targetLangCode
-                    });
-
-                    if (sourceLangCode.toLowerCase() !== targetLangCode.toLowerCase()) {
-                        speakText(translatedText, targetLangCode);
-                    }
-                } catch (err) {
-                    console.error("Translation Error:", err);
-                    updateTranscript(msgId, dateString, timeString, speechText, "[Translation Failed]", sourceLangCode, targetLangCode);
-                }
+                // Dorong teks asli suara ke Firebase Realtime Database agar diterima semua HP peserta lain
+                roomRef.push({
+                    id: uniqueId,
+                    date: dateString,
+                    time: timeString,
+                    original: speechText,
+                    sourceLang: sourceLangCode,
+                    timestamp: Date.now()
+                });
             }
         };
 
@@ -527,7 +572,6 @@
         btnText.textContent = "Start Translation";
         actionBtn.className = "btn btn-start";
         statusBadge.style.display = 'none';
-        targetLangSelect.disabled = false;
         sourceLangSelect.disabled = false;
     }
 
@@ -547,24 +591,25 @@
         return translated.trim();
     }
 
-    let counter = 0;
-    function appendTranscript(date, time, original, translated) {
-        counter++;
-        const id = `msg-${counter}`;
-        const div = document.createElement('div');
-        div.className = 'msg-item';
-        div.id = id;
+    function appendOrUpdateLiveChat(id, date, time, original, translated, sourceLang, targetLang) {
+        let div = document.getElementById(id);
+        let noteInfo = (sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Same Language)" : "";
+        if (!div) {
+            div = document.createElement('div');
+            div.className = 'msg-item';
+            div.id = id;
+            transcriptBox.appendChild(div);
+        }
         div.innerHTML = `
-            <div class="msg-meta">📅 ${date} | ⏰ ${time}</div>
+            <div class="msg-meta">📅 ${date} | ⏰ ${time} [Source: ${sourceLang.toUpperCase()}]</div>
             <div class="msg-original">🗣️ "${original}"</div>
-            <div class="msg-translated">🔄 ${translated}</div>
+            <div class="msg-translated">🔄 ${translated}${noteInfo}</div>
         `;
-        transcriptBox.appendChild(div);
         transcriptBox.scrollTop = transcriptBox.scrollHeight;
         return id;
     }
 
-    function updateTranscript(id, date, time, original, translated, sourceLang, targetLang) {
+    function updateLiveChat(id, date, time, original, translated, sourceLang, targetLang) {
         const div = document.getElementById(id);
         if (div) {
             let noteInfo = (sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Same Language)" : "";
