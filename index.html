@@ -271,15 +271,32 @@
             color: #ffffff;
         }
 
-        /* Tombol Save disembunyikan secara default */
-        .btn-save {
+        /* Container Panel Owner yang awalnya disembunyikan */
+        #ownerPanel {
             display: none;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(99, 102, 241, 0.05);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            padding: 12px;
+            border-radius: var(--radius-md);
+        }
+
+        .btn-save {
             background: rgba(16, 185, 129, 0.15);
             color: #34d399;
             border: 1px solid rgba(16, 185, 129, 0.3);
             width: 100%;
         }
         .btn-save:hover { background: rgba(16, 185, 129, 0.25); }
+
+        .btn-clear {
+            background: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            width: 100%;
+        }
+        .btn-clear:hover { background: rgba(244, 63, 94, 0.25); }
 
         /* Tombol Akses Khusus Owner */
         .btn-owner {
@@ -288,7 +305,6 @@
             border: 1px dashed var(--border-glass);
             font-size: 10px;
             padding: 6px;
-            margin-top: -6px;
         }
         .btn-owner:hover { color: var(--text-main); border-color: var(--primary-glow); }
 
@@ -363,15 +379,21 @@
         </button>
     </div>
 
-    <!-- Tombol Save yang awalnya tersembunyi -->
-    <button id="saveBtn" class="btn btn-save" type="button" onclick="saveNotulenToWord()">
-        <span>💾 Save Minutes to Word (Owner Only)</span>
-    </button>
-
     <!-- Tombol kecil tersembunyi untuk verifikasi owner -->
     <button class="btn btn-owner" type="button" onclick="verifyOwner()">
-        🔒 Mode Owner (Unlock Save)
+        🔒 Mode Owner (Unlock Panel)
     </button>
+
+    <!-- Panel Khusus Owner (Disembunyikan secara default) -->
+    <div id="ownerPanel">
+        <label style="color: var(--primary-glow); text-align: center;">⚙️ Owner Control Panel</label>
+        <button id="saveBtn" class="btn btn-save" type="button" onclick="saveNotulenToWord()">
+            <span>💾 Save Minutes to Word</span>
+        </button>
+        <button id="clearBtn" class="btn btn-clear" type="button" onclick="clearMeetingHistory()">
+            <span>🗑️ Clear / Hapus Semua Riwayat Meeting</span>
+        </button>
+    </div>
 
     <div class="footer-note">
         <span>🎧☁️</span> Cloud Meeting Room Sync Enabled (Firebase)
@@ -418,7 +440,7 @@
     const transcriptBox = document.getElementById('transcriptBox');
     const targetLangSelect = document.getElementById('targetLang');
     const sourceLangSelect = document.getElementById('sourceLang');
-    const saveBtn = document.getElementById('saveBtn');
+    const ownerPanel = document.getElementById('ownerPanel');
 
     window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -427,7 +449,7 @@
     }
 
     // Mendengarkan pesan masuk dari Cloud Firebase Realtime Database untuk semua peserta meeting
-    roomRef.limitToLast(30).on('child_added', async (snapshot) => {
+    roomRef.on('child_added', async (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
 
@@ -473,14 +495,35 @@
         }
     });
 
-    // Fungsi untuk membuka akses Save dengan memasukkan Password
+    // Event listener untuk menghapus tampilan riwayat jika database di-clear oleh owner
+    roomRef.on('value', (snapshot) => {
+        if (!snapshot.exists()) {
+            chatHistory = [];
+            transcriptBox.innerHTML = '<div class="transcript-placeholder">Riwayat meeting telah dibersihkan.</div>';
+        }
+    });
+
+    // Fungsi untuk membuka akses Panel Owner dengan memasukkan Password
     function verifyOwner() {
-        let inputPass = prompt("Masukkan Password Owner untuk membuka tombol Save:");
+        let inputPass = prompt("Masukkan Password Owner untuk membuka panel:");
         if (inputPass === OWNER_PASSWORD) {
-            saveBtn.style.display = "flex";
-            alert("Akses Owner Beraktifitas! Tombol Save sekarang dimunculkan.");
+            ownerPanel.style.display = "flex";
+            alert("Akses Owner Berhasil! Panel kontrol owner sekarang dimunculkan.");
         } else if (inputPass !== null) {
             alert("Password salah! Akses ditolak.");
+        }
+    }
+
+    // Fungsi Clear / Hapus Semua Riwayat Meeting (Lokal & Firebase)
+    function clearMeetingHistory() {
+        if (confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat meeting untuk semua perangkat yang terhubung?")) {
+            roomRef.remove().then(() => {
+                chatHistory = [];
+                transcriptBox.innerHTML = '<div class="transcript-placeholder">Semua riwayat meeting telah dihapus.</div>';
+                alert("Riwayat meeting berhasil dibersihkan dari server.");
+            }).catch((error) => {
+                alert("Gagal menghapus riwayat: " + error.message);
+            });
         }
     }
 
