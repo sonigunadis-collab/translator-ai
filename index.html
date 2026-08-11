@@ -321,17 +321,139 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+        /* ===== ROOM LOBBY & ROOM SESSION ===== */
+        #roomLobby {
+            width: 100%;
+            max-width: 720px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.03) inset;
+            padding: 24px;
+            position: relative;
+            z-index: 10;
+        }
+        #roomLobby::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--primary-glow), var(--secondary-glow), var(--accent-cyan));
+            border-radius: calc(var(--radius-lg) + 2px);
+            z-index: -1;
+            opacity: .35;
+            filter: blur(10px);
+        }
+        .room-lobby-head { text-align:center; margin-bottom:18px; }
+        .room-lobby-head h2 { font-size:20px; margin-bottom:5px; }
+        .room-lobby-head p { font-size:11px; color:var(--text-muted); }
+        .room-grid {
+            display:grid;
+            grid-template-columns:repeat(2, minmax(0,1fr));
+            gap:12px;
+        }
+        .room-card {
+            min-height:112px;
+            padding:14px;
+            border-radius:var(--radius-md);
+            border:1px solid var(--border-glass);
+            background:rgba(15,23,42,.62);
+            color:var(--text-main);
+            cursor:pointer;
+            text-align:left;
+            transition:transform .2s ease, border-color .2s ease, background .2s ease;
+            touch-action:manipulation;
+        }
+        .room-card:hover { transform:translateY(-2px); border-color:rgba(99,102,241,.65); background:rgba(30,41,59,.82); }
+        .room-card:active { transform:scale(.98); }
+        .room-card:last-child { grid-column:1 / -1; }
+        .room-title { display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:800; font-size:14px; }
+        .room-state { margin-top:9px; font-size:11px; font-weight:700; }
+        .room-state.available { color:var(--success); }
+        .room-state.booked { color:#fbbf24; }
+        .room-count { margin-top:6px; color:var(--text-muted); font-size:10px; }
+        .room-code-box {
+            display:none;
+            margin-top:14px;
+            padding:12px;
+            border-radius:var(--radius-md);
+            border:1px solid rgba(99,102,241,.25);
+            background:rgba(99,102,241,.07);
+            text-align:center;
+        }
+        .room-code-box strong { display:block; font-size:22px; letter-spacing:6px; color:#a5b4fc; margin-top:3px; }
+        .room-session-bar {
+            display:none;
+            align-items:center;
+            justify-content:space-between;
+            gap:10px;
+            padding:9px 10px;
+            border-radius:var(--radius-md);
+            border:1px solid rgba(99,102,241,.25);
+            background:rgba(99,102,241,.06);
+        }
+        .room-session-info { font-size:10px; color:var(--text-muted); line-height:1.5; }
+        .room-session-info b { color:var(--text-main); }
+        .btn-leave-room {
+            flex:0 0 auto;
+            width:auto;
+            padding:8px 11px;
+            background:rgba(244,63,94,.12);
+            color:#fb7185;
+            border:1px solid rgba(244,63,94,.3);
+        }
+        .room-loading { text-align:center; padding:16px; color:var(--text-muted); font-size:11px; }
+        @media (max-width: 520px) {
+            body { align-items:flex-start; padding:10px; }
+            #roomLobby, .app-container { padding:16px; }
+            .room-grid { grid-template-columns:1fr; }
+            .room-card:last-child { grid-column:auto; }
+            .room-card { min-height:96px; }
+            .settings-grid, .controls-grid { grid-template-columns:1fr 1fr; }
+        }
+        @media (max-width: 360px) {
+            .settings-grid, .controls-grid { grid-template-columns:1fr; }
+            .room-session-bar { align-items:flex-start; flex-direction:column; }
+            .btn-leave-room { width:100%; }
+        }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+
+    <div id="roomLobby">
+        <div class="room-lobby-head">
+            <span class="ai-badge">PRIVATE TRANSLATOR ROOMS</span>
+            <h2>Pilih Meeting Room</h2>
+            <p>Setiap room memiliki percakapan translator yang terpisah.</p>
+        </div>
+        <div id="roomGrid" class="room-grid">
+            <div class="room-loading">Menghubungkan ke server room...</div>
+        </div>
+        <div id="roomCodeBox" class="room-code-box">
+            <div>🔑 Kode room Anda</div>
+            <strong id="createdRoomCode">----</strong>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:7px;">Bagikan 4 digit ini hanya kepada orang yang ingin masuk ke room yang sama.</div>
+        </div>
+    </div>
+
+<div class="app-container" id="translatorApp" style="display:none;">
     <div class="header">
         <span class="ai-badge">GLOBAL LANGUAGE BRIDGE ACTIVATED</span>
         <h1>VoiceBridge AI</h1>
         <p>Real-Time Translation & Meeting Intelligence</p>
     </div>
 
+
+    <div id="roomSessionBar" class="room-session-bar">
+        <div class="room-session-info">
+            🔐 <b id="currentRoomLabel">Room 1</b> · Kode: <b id="currentRoomCode">----</b><br>
+            👥 <b id="currentRoomCount">1</b> orang sedang bergabung
+        </div>
+        <button id="leaveRoomBtn" class="btn btn-leave-room" type="button" onclick="leaveRoom()">🚪 Tinggalkan Room</button>
+    </div>
     <div class="settings-grid">
         <div class="setting-section">
             <label>Your Language (Mic)</label>
@@ -365,6 +487,7 @@
         <span class="pulse-dot"></span>
         <span id="statusText">Listening & Broadcasting...</span>
     </div>
+    <div id="recordingInfo" style="display:none;text-align:center;font-size:10px;color:var(--text-muted);">🎙️ Recording aktif selama room terhubung — tidak ada batas 2 menit</div>
     
     <div id="transcriptBox" class="transcript-box">
         <div class="transcript-placeholder">Select your target language, click 'Start Translation' to start meeting room sync...</div>
@@ -407,7 +530,7 @@
 <script>
     // 🔑 KONFIGURASI FIREBASE ANDA
     const firebaseConfig = {
-        apiKey: "AIzaSyBbgNfLv-sclwDUdbW9SJyKoIhMr1-BT_s",
+        apiKey: "AIzaSyBbgNfLv-sclwDUdbW9SJ7W9M1-BT_s",
         authDomain: "ai-translator-meeting.firebaseapp.com",
         databaseURL: "https://ai-translator-meeting-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "ai-translator-meeting",
@@ -417,19 +540,32 @@
         measurementId: "G-MYZW465XSF"
     };
 
-    // Inisialisasi Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-    const roomRef = db.ref('meeting_rooms/toyota_room_utama');
 
-    let recognition;
+    const ROOM_IDS = ["room1", "room2", "room3", "room4", "room5", "room6"];
+    const ROOM_ROOT = "meeting_rooms";
+    const OWNER_PASSWORD = "Toyota2026";
+
+    let recognition = null;
     let isRunning = false;
     let isMuted = false;
     let chatHistory = [];
     let translationCache = new Map();
 
-    // 🔑 ATUR PASSWORD OWNER ANDA DI SINI
-    const OWNER_PASSWORD = "Toyota2026";
+    let currentRoomId = null;
+    let currentRoomCode = null;
+    let currentMemberId = null;
+    let roomRef = null;
+    let roomMessagesRef = null;
+    let roomMetaRef = null;
+    let roomMembersRef = null;
+    let roomListenersAttached = false;
+    let leavingRoom = false;
+    // Browser SpeechRecognition sering memutus sesi setelah periode tertentu.
+    // Timer ini melakukan restart terkontrol tanpa mematikan fitur recording user.
+    let recognitionRestartTimer = null;
+    let recognitionGeneration = 0;
 
     const actionBtn = document.getElementById('actionBtn');
     const btnText = document.getElementById('btnText');
@@ -437,75 +573,381 @@
     const micBtnText = document.getElementById('micBtnText');
     const statusBadge = document.getElementById('statusBadge');
     const statusText = document.getElementById('statusText');
+    const recordingInfo = document.getElementById('recordingInfo');
     const transcriptBox = document.getElementById('transcriptBox');
     const targetLangSelect = document.getElementById('targetLang');
     const sourceLangSelect = document.getElementById('sourceLang');
     const ownerPanel = document.getElementById('ownerPanel');
+    const roomLobby = document.getElementById('roomLobby');
+    const roomGrid = document.getElementById('roomGrid');
+    const roomCodeBox = document.getElementById('roomCodeBox');
+    const createdRoomCode = document.getElementById('createdRoomCode');
+    const translatorApp = document.getElementById('translatorApp');
+    const roomSessionBar = document.getElementById('roomSessionBar');
+    const currentRoomLabel = document.getElementById('currentRoomLabel');
+    const currentRoomCodeEl = document.getElementById('currentRoomCode');
+    const currentRoomCount = document.getElementById('currentRoomCount');
 
     window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!window.SpeechRecognition) {
-        alert("Browser Anda tidak mendukung Speech Recognition. Gunakan Google Chrome.");
+    function randomRoomCode() {
+        return String(Math.floor(1000 + Math.random() * 9000));
     }
 
-    // Mendengarkan pesan masuk dari Cloud Firebase Realtime Database untuk semua peserta meeting
-    roomRef.on('child_added', async (snapshot) => {
-        const data = snapshot.val();
-        if (!data) return;
+    function makeMemberId() {
+        return 'member-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+    }
 
-        const targetLangCode = targetLangSelect.value;
-        const sourceLangCode = data.sourceLang; // misal: 'ja'
-        let translatedText = data.original;
+    function roomNumber(roomId) {
+        return roomId.replace('room', '');
+    }
 
-        if (transcriptBox.querySelector('.transcript-placeholder')) {
-            transcriptBox.innerHTML = '';
-        }
+    function setLobbyMessage(message) {
+        roomGrid.innerHTML = '<div class="room-loading">' + message + '</div>';
+    }
 
-        // Buat elemen penampung terlebih dahulu dengan status "Translating..."
-        const msgId = appendOrUpdateLiveChat(data.id, data.date, data.time, data.original, "Translating...", sourceLangCode, targetLangCode);
+    // Membaca status 6 room. Data chat setiap room benar-benar terpisah.
+    function watchRoomList() {
+        roomGrid.innerHTML = '';
+        // Buat kartu lebih dulu agar urutannya selalu Room 1 sampai Room 6.
+        ROOM_IDS.forEach(roomId => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'room-card';
+            button.id = 'room-card-' + roomId;
+            button.onclick = () => enterRoom(roomId);
+            button.innerHTML = `
+                <div class="room-title"><span>🚪 Room ${roomNumber(roomId)}</span><span>⏳</span></div>
+                <div class="room-state">CHECKING...</div>
+                <div class="room-count">Mengambil status room...</div>
+            `;
+            roomGrid.appendChild(button);
+        });
 
-        try {
-            const cacheKey = `${data.original}_${sourceLangCode}_${targetLangCode}`;
+        ROOM_IDS.forEach(roomId => {
+            const metaRef = db.ref(`${ROOM_ROOT}/${roomId}/meta`);
+            const membersRef = db.ref(`${ROOM_ROOT}/${roomId}/members`);
+            let meta = null;
+            let memberCount = 0;
 
-            if (translationCache.has(cacheKey)) {
-                translatedText = translationCache.get(cacheKey);
-            } else {
-                translatedText = await translateText(data.original, sourceLangCode, targetLangCode);
-                translationCache.set(cacheKey, translatedText);
-            }
-            
-            updateLiveChat(msgId, data.date, data.time, data.original, translatedText, sourceLangCode, targetLangCode);
-            
-            // Simpan ke history lokal device ini untuk siap diexport ke Word
-            chatHistory.push({
-                date: data.date,
-                time: data.time,
-                original: data.original,
-                sourceLang: sourceLangCode,
-                translated: translatedText,
-                targetLang: targetLangCode
+            const render = () => {
+                const existing = document.getElementById('room-card-' + roomId);
+                const booked = !!(meta && meta.accessCode && memberCount > 0);
+                const html = `
+                    <div class="room-title">
+                        <span>🚪 Room ${roomNumber(roomId)}</span>
+                        <span>${booked ? '🔒' : '🟢'}</span>
+                    </div>
+                    <div class="room-state ${booked ? 'booked' : 'available'}">${booked ? 'ROOM BOOKED' : 'AVAILABLE'}</div>
+                    <div class="room-count">👥 ${memberCount} orang bergabung${booked ? ' · Klik untuk masukkan kode' : ' · Klik untuk masuk'}</div>
+                `;
+
+                if (existing) {
+                    existing.innerHTML = html;
+                } else {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'room-card';
+                    button.id = 'room-card-' + roomId;
+                    button.onclick = () => enterRoom(roomId);
+                    button.innerHTML = html;
+                    roomGrid.appendChild(button);
+                }
+            };
+
+            metaRef.on('value', snap => {
+                meta = snap.val();
+                render();
             });
 
-            if (sourceLangCode.toLowerCase() !== targetLangCode.toLowerCase()) {
-                speakText(translatedText, targetLangCode);
+            membersRef.on('value', snap => {
+                memberCount = snap.exists() ? snap.numChildren() : 0;
+                render();
+
+                // Jika semua peserta benar-benar sudah keluar, hapus meta/kode lama.
+                // Ini juga membersihkan room setelah browser/laptop terputus mendadak.
+                if (memberCount === 0) {
+                    metaRef.once('value').then(metaSnap => {
+                        const value = metaSnap.val();
+                        if (value && value.ownerMemberId) {
+                            metaRef.remove().catch(() => {});
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    async function enterRoom(roomId) {
+        if (currentRoomId) return;
+        currentMemberId = makeMemberId();
+
+        const metaRef = db.ref(`${ROOM_ROOT}/${roomId}/meta`);
+        const membersRef = db.ref(`${ROOM_ROOT}/${roomId}/members`);
+
+        try {
+            const metaSnap = await metaRef.once('value');
+            let meta = metaSnap.val() || {};
+            const membersSnap = await membersRef.once('value');
+            const memberCount = membersSnap.exists() ? membersSnap.numChildren() : 0;
+
+            // Jika kode tersisa tetapi sudah tidak ada peserta, bersihkan room lama terlebih dahulu.
+            if (memberCount === 0 && meta.ownerMemberId) {
+                await metaRef.remove().catch(() => {});
+                meta = {};
             }
-        } catch (err) {
-            console.error("Translation Error:", err);
-            updateLiveChat(msgId, data.date, data.time, data.original, "[Translation Failed]", sourceLangCode, targetLangCode);
+
+            let code;
+
+            if (meta.accessCode && memberCount > 0) {
+                code = prompt(`Room ${roomNumber(roomId)} sedang BOOKED.\nMasukkan kode 4 digit untuk bergabung:`);
+                if (code === null) return;
+                code = code.trim();
+
+                if (!/^\d{4}$/.test(code) || code !== String(meta.accessCode)) {
+                    alert("Kode room salah. Akses ditolak.");
+                    return;
+                }
+
+                // Menambah peserta secara atomik setelah kode benar.
+                await metaRef.transaction(current => {
+                    if (!current || !current.accessCode) return;
+                    current.activeCount = Number(current.activeCount || 0) + 1;
+                    return current;
+                });
+            } else {
+                // Room kosong: orang pertama menjadi pembuat room dan otomatis mendapat kode.
+                code = randomRoomCode();
+                const result = await metaRef.transaction(current => {
+                    // ownerMemberId adalah lock sederhana untuk memastikan hanya satu orang
+                    // yang dapat membuat room ketika room sedang kosong.
+                    if (current && current.ownerMemberId) return;
+                    return {
+                        accessCode: code,
+                        activeCount: 1,
+                        ownerMemberId: currentMemberId,
+                        createdAt: firebase.database.ServerValue.TIMESTAMP
+                    };
+                });
+
+                if (!result.committed) {
+                    const latest = (await metaRef.once('value')).val() || {};
+                    const latestMembers = await membersRef.once('value');
+                    const latestCount = latestMembers.exists() ? latestMembers.numChildren() : 0;
+                    if (latest.accessCode && latestCount > 0) {
+                        alert("Room baru saja dipakai user lain. Silakan klik room tersebut dan masukkan kode.");
+                        return;
+                    }
+                    alert("Room belum dapat dibuka. Silakan coba lagi.");
+                    return;
+                }
+
+                code = String((result.snapshot.val() || {}).accessCode || code);
+            }
+
+            await openRoomSession(roomId, code, memberCount === 0);
+        } catch (error) {
+            console.error(error);
+            alert("Gagal membuka room: " + (error && error.message ? error.message : error));
+        }
+    }
+
+    async function openRoomSession(roomId, code, isCreator) {
+        currentRoomId = roomId;
+        currentRoomCode = String(code);
+        roomRef = db.ref(`${ROOM_ROOT}/${roomId}`);
+        roomMessagesRef = db.ref(`${ROOM_ROOT}/${roomId}/messages`);
+        roomMetaRef = db.ref(`${ROOM_ROOT}/${roomId}/meta`);
+        roomMembersRef = db.ref(`${ROOM_ROOT}/${roomId}/members`);
+
+        const memberRef = roomMembersRef.child(currentMemberId);
+
+        try {
+            await memberRef.onDisconnect().remove();
+            await memberRef.set({
+                joinedAt: firebase.database.ServerValue.TIMESTAMP,
+                online: true
+            });
+
+            currentRoomLabel.textContent = 'Room ' + roomNumber(roomId);
+            currentRoomCodeEl.textContent = currentRoomCode;
+            currentRoomCount.textContent = '1';
+            roomSessionBar.style.display = 'flex';
+            roomLobby.style.display = 'none';
+            translatorApp.style.display = 'flex';
+
+            if (isCreator) {
+                createdRoomCode.textContent = currentRoomCode;
+                roomCodeBox.style.display = 'block';
+                alert(`Room ${roomNumber(roomId)} berhasil dibuat.\nKode room Anda: ${currentRoomCode}\nBagikan kode ini kepada peserta yang Anda izinkan.`);
+            } else {
+                roomCodeBox.style.display = 'none';
+            }
+
+            attachRoomListeners();
+            watchCurrentRoomMembers();
+        } catch (error) {
+            console.error(error);
+            // Rollback counter jika session gagal dibuat.
+            await roomMetaRef.transaction(current => {
+                if (!current) return current;
+                const next = Math.max(0, Number(current.activeCount || 1) - 1);
+                if (next === 0) return null;
+                current.activeCount = next;
+                return current;
+            }).catch(() => {});
+            currentRoomId = null;
+            currentRoomCode = null;
+            currentMemberId = null;
+            alert("Gagal masuk ke room: " + (error && error.message ? error.message : error));
+        }
+    }
+
+    function watchCurrentRoomMembers() {
+        if (!roomMembersRef) return;
+        roomMembersRef.on('value', snapshot => {
+            const count = snapshot.exists() ? snapshot.numChildren() : 0;
+            currentRoomCount.textContent = String(Math.max(1, count));
+        });
+    }
+
+    function attachRoomListeners() {
+        if (!roomMessagesRef || roomListenersAttached) return;
+        roomListenersAttached = true;
+
+        roomMessagesRef.on('child_added', async snapshot => {
+            const data = snapshot.val();
+            if (!data) return;
+
+            const targetLangCode = targetLangSelect.value;
+            const sourceLangCode = data.sourceLang || 'en';
+            let translatedText = data.original || '';
+
+            if (transcriptBox.querySelector('.transcript-placeholder')) {
+                transcriptBox.innerHTML = '';
+            }
+
+            const msgId = appendOrUpdateLiveChat(
+                data.id || snapshot.key,
+                data.date || '',
+                data.time || '',
+                data.original || '',
+                "Translating...",
+                sourceLangCode,
+                targetLangCode
+            );
+
+            try {
+                const cacheKey = `${data.original}_${sourceLangCode}_${targetLangCode}`;
+                if (translationCache.has(cacheKey)) {
+                    translatedText = translationCache.get(cacheKey);
+                } else {
+                    translatedText = await translateText(data.original, sourceLangCode, targetLangCode);
+                    translationCache.set(cacheKey, translatedText);
+                }
+
+                updateLiveChat(msgId, data.date, data.time, data.original, translatedText, sourceLangCode, targetLangCode);
+
+                chatHistory.push({
+                    date: data.date,
+                    time: data.time,
+                    original: data.original,
+                    sourceLang: sourceLangCode,
+                    translated: translatedText,
+                    targetLang: targetLangCode
+                });
+
+                if (sourceLangCode.toLowerCase() !== targetLangCode.toLowerCase()) {
+                    speakText(translatedText, targetLangCode);
+                }
+            } catch (err) {
+                console.error("Translation Error:", err);
+                updateLiveChat(msgId, data.date, data.time, data.original, "[Translation Failed]", sourceLangCode, targetLangCode);
+            }
+        });
+
+        roomMessagesRef.on('value', snapshot => {
+            if (!snapshot.exists() && currentRoomId) {
+                chatHistory = [];
+                transcriptBox.innerHTML = '<div class="transcript-placeholder">Belum ada percakapan di room ini.</div>';
+            }
+        });
+    }
+
+    function detachRoomListeners() {
+        if (roomMessagesRef) roomMessagesRef.off();
+        if (roomMembersRef) roomMembersRef.off();
+        roomListenersAttached = false;
+    }
+
+    async function leaveRoom() {
+        if (!currentRoomId || leavingRoom) return;
+
+        const count = Number(currentRoomCount.textContent || 1);
+        const message = count > 1
+            ? `Ada ${count} orang yang sedang bergabung di Room ${roomNumber(currentRoomId)}.\n\nApakah Anda yakin ingin meninggalkan room?`
+            : `Anda adalah satu-satunya peserta di Room ${roomNumber(currentRoomId)}.\n\nSetelah Anda keluar, room akan kembali AVAILABLE. Lanjutkan?`;
+
+        if (!confirm(message)) return;
+
+        leavingRoom = true;
+        stopListening();
+
+        const oldRoomId = currentRoomId;
+        const oldMetaRef = roomMetaRef;
+        const oldMemberRef = roomMembersRef ? roomMembersRef.child(currentMemberId) : null;
+
+        detachRoomListeners();
+
+        try {
+            if (oldMemberRef) await oldMemberRef.remove();
+
+            // Hitung ulang peserta. Jika sudah kosong, hapus kode room agar room kembali AVAILABLE.
+            const membersSnap = await db.ref(`${ROOM_ROOT}/${oldRoomId}/members`).once('value');
+            const remaining = membersSnap.exists() ? membersSnap.numChildren() : 0;
+
+            await oldMetaRef.transaction(current => {
+                if (!current) return null;
+                if (remaining === 0) return null;
+                current.activeCount = remaining;
+                return current;
+            });
+        } catch (error) {
+            console.warn("Leave room cleanup:", error);
+        }
+
+        currentRoomId = null;
+        currentRoomCode = null;
+        currentMemberId = null;
+        roomRef = null;
+        roomMessagesRef = null;
+        roomMetaRef = null;
+        roomMembersRef = null;
+        chatHistory = [];
+        translationCache.clear();
+        roomCodeBox.style.display = 'none';
+        roomSessionBar.style.display = 'none';
+        translatorApp.style.display = 'none';
+        roomLobby.style.display = 'block';
+        transcriptBox.innerHTML = '<div class="transcript-placeholder">Pilih room untuk memulai meeting...</div>';
+        ownerPanel.style.display = 'none';
+        leavingRoom = false;
+    }
+
+    window.addEventListener('beforeunload', () => {
+        // onDisconnect Firebase menangani pembersihan member saat tab/browser ditutup.
+        if (currentRoomId && currentMemberId && roomMembersRef) {
+            roomMembersRef.child(currentMemberId).remove();
         }
     });
 
-    // Event listener untuk menghapus tampilan riwayat jika database di-clear oleh owner
-    roomRef.on('value', (snapshot) => {
-        if (!snapshot.exists()) {
-            chatHistory = [];
-            transcriptBox.innerHTML = '<div class="transcript-placeholder">Riwayat meeting telah dibersihkan.</div>';
-        }
-    });
-
-    // Fungsi untuk membuka akses Panel Owner dengan memasukkan Password
+    // Owner panel tetap dipertahankan, tetapi sekarang hanya berlaku untuk room yang sedang aktif.
     function verifyOwner() {
-        let inputPass = prompt("Masukkan Password Owner untuk membuka panel:");
+        if (!currentRoomId) {
+            alert("Masuk ke room terlebih dahulu.");
+            return;
+        }
+        const inputPass = prompt("Masukkan Password Owner untuk membuka panel:");
         if (inputPass === OWNER_PASSWORD) {
             ownerPanel.style.display = "flex";
             alert("Akses Owner Berhasil! Panel kontrol owner sekarang dimunculkan.");
@@ -514,14 +956,18 @@
         }
     }
 
-    // Fungsi Clear / Hapus Semua Riwayat Meeting (Lokal & Firebase)
     function clearMeetingHistory() {
-        if (confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat meeting untuk semua perangkat yang terhubung?")) {
-            roomRef.remove().then(() => {
+        if (!roomMessagesRef) {
+            alert("Belum ada room yang aktif.");
+            return;
+        }
+
+        if (confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat meeting di room ini untuk semua perangkat yang terhubung?")) {
+            roomMessagesRef.remove().then(() => {
                 chatHistory = [];
                 transcriptBox.innerHTML = '<div class="transcript-placeholder">Semua riwayat meeting telah dihapus.</div>';
-                alert("Riwayat meeting berhasil dibersihkan dari server.");
-            }).catch((error) => {
+                alert("Riwayat meeting berhasil dibersihkan dari server untuk room ini.");
+            }).catch(error => {
                 alert("Gagal menghapus riwayat: " + error.message);
             });
         }
@@ -541,94 +987,184 @@
     }
 
     function toggleTranslation() {
-        if (!isRunning) {
-            startListening();
-        } else {
-            stopListening();
+        if (!currentRoomId) {
+            alert("Silakan pilih Room terlebih dahulu.");
+            return;
         }
+        if (!window.SpeechRecognition) {
+            alert("Browser ini tidak mendukung Speech Recognition. Gunakan Google Chrome/Edge versi terbaru melalui HTTPS.");
+            return;
+        }
+        if (!isRunning) startListening();
+        else stopListening();
     }
 
     function startListening() {
-        if (!window.SpeechRecognition) return;
+        if (!window.SpeechRecognition || !currentRoomId) return;
+        if (isRunning) return;
 
-        recognition = new window.SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        recognition.lang = sourceLangSelect.value;
+        isRunning = true;
+        recognitionGeneration++;
+        const generation = recognitionGeneration;
 
-        recognition.onstart = () => {
-            isRunning = true;
-            btnText.textContent = "Stop Translation";
-            actionBtn.className = "btn btn-stop";
-            statusBadge.style.display = 'flex';
-            sourceLangSelect.disabled = true;
-            if (transcriptBox.querySelector('.transcript-placeholder')) {
-                transcriptBox.innerHTML = '';
+        // Chrome desktop/mobile dapat mengakhiri satu sesi SpeechRecognition secara
+        // otomatis. Kita restart sebelum batas tersebut tercapai, sehingga status
+        // Start Translation tetap aktif dan perekaman berlanjut tanpa batas waktu.
+        const scheduleRecognitionRefresh = () => {
+            clearTimeout(recognitionRestartTimer);
+            recognitionRestartTimer = setTimeout(() => {
+                if (!isRunning || leavingRoom || generation !== recognitionGeneration) return;
+                restartRecognitionSession(generation);
+            }, 50000); // refresh berkala, jauh di bawah batas sesi browser.
+        };
+
+        const createRecognition = () => {
+            if (!isRunning || leavingRoom || generation !== recognitionGeneration) return;
+
+            try {
+                recognition = new window.SpeechRecognition();
+                recognition.continuous = true;
+                recognition.interimResults = false;
+                recognition.lang = sourceLangSelect.value;
+
+                recognition.onstart = () => {
+                    if (generation !== recognitionGeneration) return;
+                    isRunning = true;
+                    btnText.textContent = "Stop Translation";
+                    actionBtn.className = "btn btn-stop";
+                    statusBadge.style.display = 'flex';
+                    recordingInfo.style.display = 'block';
+                    statusText.textContent = isMuted ? "Microphone Muted" : "Listening & Broadcasting...";
+                    sourceLangSelect.disabled = true;
+                    if (transcriptBox.querySelector('.transcript-placeholder')) transcriptBox.innerHTML = '';
+                    scheduleRecognitionRefresh();
+                };
+
+                recognition.onresult = event => {
+                    if (generation !== recognitionGeneration || isMuted || !roomMessagesRef) return;
+
+                    // Kirim setiap hasil final yang muncul, bukan hanya item terakhir.
+                    for (let i = event.resultIndex || 0; i < event.results.length; i++) {
+                        const result = event.results[i];
+                        if (!result || !result.isFinal || !result[0]) continue;
+
+                        const speechText = result[0].transcript.trim();
+                        if (!speechText) continue;
+
+                        const sourceLangCode = sourceLangSelect.value.split('-')[0];
+                        const now = new Date();
+                        const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        const dateString = now.toLocaleDateString('id-ID');
+                        const uniqueId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
+
+                        roomMessagesRef.push({
+                            id: uniqueId,
+                            date: dateString,
+                            time: timeString,
+                            original: speechText,
+                            sourceLang: sourceLangCode,
+                            timestamp: Date.now()
+                        }).catch(error => {
+                            console.error("Firebase write error:", error);
+                            if (isRunning) statusText.textContent = "Firebase Error — recording tetap aktif";
+                        });
+                    }
+                };
+
+                recognition.onerror = event => {
+                    if (generation !== recognitionGeneration) return;
+                    console.warn("Speech recognition error:", event.error);
+
+                    if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                        stopListening();
+                        alert("Akses mikrofon ditolak. Di laptop, klik ikon 🔒 di kiri address bar → izinkan Microphone → reload halaman.");
+                    } else if (event.error === 'audio-capture') {
+                        stopListening();
+                        alert("Mikrofon tidak ditemukan/terkunci. Pastikan mikrofon laptop aktif dan tidak sedang dipakai aplikasi lain.");
+                    } else if (['no-speech', 'aborted', 'network'].includes(event.error)) {
+                        // Error yang umum/temporer tidak mematikan mode recording.
+                        statusText.textContent = isMuted ? "Microphone Muted" : "Reconnecting microphone...";
+                    } else {
+                        statusText.textContent = "Speech Recognition: " + event.error;
+                    }
+                };
+
+                recognition.onend = () => {
+                    if (generation !== recognitionGeneration || !isRunning || leavingRoom) return;
+                    // Jika browser sendiri mengakhiri sesi, buat sesi baru segera.
+                    clearTimeout(recognitionRestartTimer);
+                    setTimeout(() => {
+                        if (!isRunning || leavingRoom || generation !== recognitionGeneration) return;
+                        createRecognition();
+                    }, 150);
+                };
+
+                recognition.start();
+            } catch (error) {
+                console.error("SpeechRecognition start error:", error);
+                if (isRunning && generation === recognitionGeneration) {
+                    statusText.textContent = "Reconnecting microphone...";
+                    setTimeout(() => {
+                        if (isRunning && !leavingRoom && generation === recognitionGeneration) createRecognition();
+                    }, 500);
+                }
             }
         };
 
-        recognition.onresult = async (event) => {
-            if (isMuted) return;
+        // Simpan helper untuk timer refresh sesi yang sedang aktif.
+        window.__voiceBridgeCreateRecognition = createRecognition;
+        createRecognition();
+    }
 
-            const speechText = event.results[event.results.length - 1][0].transcript.trim();
-            const sourceLangCode = sourceLangSelect.value.split('-')[0];
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            const dateString = now.toLocaleDateString('id-ID');
-            const uniqueId = 'msg-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7);
-            
-            if (speechText !== "") {
-                // Dorong teks asli suara ke Firebase Realtime Database agar diterima semua HP peserta lain
-                roomRef.push({
-                    id: uniqueId,
-                    date: dateString,
-                    time: timeString,
-                    original: speechText,
-                    sourceLang: sourceLangCode,
-                    timestamp: Date.now()
-                });
-            }
-        };
+    function restartRecognitionSession(generation) {
+        if (!isRunning || leavingRoom || generation !== recognitionGeneration) return;
+        clearTimeout(recognitionRestartTimer);
 
-        recognition.onerror = (event) => {
-            console.warn("Speech recognition error:", event.error);
-        };
-
-        recognition.onend = () => {
-            if (isRunning) {
-                try { recognition.start(); } catch(e) {}
-            }
-        };
-
-        try {
-            recognition.start();
-        } catch(e) {
-            console.error(e);
+        const oldRecognition = recognition;
+        if (oldRecognition) {
+            try {
+                oldRecognition.onend = null;
+                oldRecognition.stop();
+            } catch (e) {}
         }
+        recognition = null;
+
+        setTimeout(() => {
+            if (!isRunning || leavingRoom || generation !== recognitionGeneration) return;
+            if (typeof window.__voiceBridgeCreateRecognition === 'function') {
+                window.__voiceBridgeCreateRecognition();
+            }
+        }, 150);
     }
 
     function stopListening() {
         isRunning = false;
+        recognitionGeneration++;
+        clearTimeout(recognitionRestartTimer);
+        recognitionRestartTimer = null;
+
         if (recognition) {
-            recognition.stop();
+            try { recognition.onend = null; recognition.stop(); } catch (e) {}
         }
+        recognition = null;
+        window.__voiceBridgeCreateRecognition = null;
         btnText.textContent = "Start Translation";
         actionBtn.className = "btn btn-start";
         statusBadge.style.display = 'none';
+        recordingInfo.style.display = 'none';
         sourceLangSelect.disabled = false;
     }
 
     async function translateText(text, sourceLang, targetLang) {
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
         const response = await fetch(url);
+        if (!response.ok) throw new Error("Translation service HTTP " + response.status);
         const data = await response.json();
-        
+
         let translated = "";
         if (data && data[0]) {
             for (let i = 0; i < data[0].length; i++) {
-                if (data[0][i][0]) {
-                    translated += data[0][i][0];
-                }
+                if (data[0][i][0]) translated += data[0][i][0];
             }
         }
         return translated.trim();
@@ -636,17 +1172,19 @@
 
     function appendOrUpdateLiveChat(id, date, time, original, translated, sourceLang, targetLang) {
         let div = document.getElementById(id);
-        let noteInfo = (sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Same Language)" : "";
+        const noteInfo = (sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Same Language)" : "";
+
         if (!div) {
             div = document.createElement('div');
             div.className = 'msg-item';
             div.id = id;
             transcriptBox.appendChild(div);
         }
+
         div.innerHTML = `
-            <div class="msg-meta">📅 ${date} | ⏰ ${time} [Source: ${sourceLang.toUpperCase()}]</div>
-            <div class="msg-original">🗣️ "${original}"</div>
-            <div class="msg-translated">🔄 ${translated}${noteInfo}</div>
+            <div class="msg-meta">📅 ${escapeHtml(date)} | ⏰ ${escapeHtml(time)} [Source: ${escapeHtml(sourceLang.toUpperCase())}]</div>
+            <div class="msg-original">🗣️ "${escapeHtml(original)}"</div>
+            <div class="msg-translated">🔄 ${escapeHtml(translated)}${noteInfo}</div>
         `;
         transcriptBox.scrollTop = transcriptBox.scrollHeight;
         return id;
@@ -655,14 +1193,20 @@
     function updateLiveChat(id, date, time, original, translated, sourceLang, targetLang) {
         const div = document.getElementById(id);
         if (div) {
-            let noteInfo = (sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Same Language)" : "";
+            const noteInfo = (sourceLang.toLowerCase() === targetLang.toLowerCase()) ? " (Same Language)" : "";
             div.innerHTML = `
-                <div class="msg-meta">📅 ${date} | ⏰ ${time} [Source: ${sourceLang.toUpperCase()}]</div>
-                <div class="msg-original">🗣️ "${original}"</div>
-                <div class="msg-translated">🔄 ${translated}${noteInfo}</div>
+                <div class="msg-meta">📅 ${escapeHtml(date)} | ⏰ ${escapeHtml(time)} [Source: ${escapeHtml(sourceLang.toUpperCase())}]</div>
+                <div class="msg-original">🗣️ "${escapeHtml(original)}"</div>
+                <div class="msg-translated">🔄 ${escapeHtml(translated)}${noteInfo}</div>
             `;
             transcriptBox.scrollTop = transcriptBox.scrollHeight;
         }
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, ch => ({
+            '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'
+        }[ch]));
     }
 
     function speakText(text, langCode) {
@@ -674,9 +1218,13 @@
         else if (langCode === 'vi') bcp47 = 'vi-VN';
         else if (langCode === 'th') bcp47 = 'th-TH';
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = bcp47;
-        window.speechSynthesis.speak(utterance);
+        try {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = bcp47;
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.warn("Speech synthesis:", e);
+        }
     }
 
     function saveNotulenToWord() {
@@ -691,7 +1239,7 @@
         const day = String(now.getDate()).padStart(2, '0');
         const hour = String(now.getHours()).padStart(2, '0');
         const minute = String(now.getMinutes()).padStart(2, '0');
-        
+
         const fileName = `Notulen-Resume-${year}${month}${day}-${hour}${minute}.doc`;
 
         let htmlContent = `
@@ -699,25 +1247,23 @@
             <head><meta charset='utf-8'><title>AI Meeting Minutes</title></head>
             <body style="font-family: Arial, sans-serif;">
                 <h2 style="color: #6366f1; text-align: center;">AI MEETING MINUTES & LIVE TRANSLATION RESUME</h2>
-                <p style="text-align: center; color: #64748b;">Tanggal: ${day}-${month}-${year} | Jam: ${hour}:${minute}</p>
+                <p style="text-align: center; color: #64748b;">Room: ${escapeHtml(currentRoomLabel.textContent)} | Tanggal: ${day}-${month}-${year} | Jam: ${hour}:${minute}</p>
                 <hr style="border: 1px solid #cbd5e1; margin-bottom: 20px;">
         `;
 
         chatHistory.forEach((item, index) => {
             htmlContent += `
                 <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #e2e8f0; background-color: #f8fafc;">
-                    <p style="font-size: 11px; color: #64748b; margin: 0 0 4px 0;"><b>[${index + 1}] Waktu:</b> ${item.date} ${item.time} | <b>Sumber:</b> ${item.sourceLang.toUpperCase()}</p>
-                    <p style="font-size: 13px; margin: 0 0 4px 0;"><b>Original:</b> "${item.original}"</p>
-                    <p style="font-size: 14px; color: #6366f1; margin: 0; font-weight: bold;"><b>Terjemahan (${item.targetLang.toUpperCase()}):</b> ${item.translated}</p>
+                    <p style="font-size: 11px; color: #64748b; margin: 0 0 4px 0;"><b>[${index + 1}] Waktu:</b> ${escapeHtml(item.date)} ${escapeHtml(item.time)} | <b>Sumber:</b> ${escapeHtml(item.sourceLang.toUpperCase())}</p>
+                    <p style="font-size: 13px; margin: 0 0 4px 0;"><b>Original:</b> "${escapeHtml(item.original)}"</p>
+                    <p style="font-size: 14px; color: #6366f1; margin: 0; font-weight: bold;"><b>Terjemahan (${escapeHtml(item.targetLang.toUpperCase())}):</b> ${escapeHtml(item.translated)}</p>
                 </div>
             `;
         });
 
         htmlContent += `</body></html>`;
 
-        const blob = new Blob(['\ufeff' + htmlContent], {
-            type: 'application/msword'
-        });
+        const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -725,7 +1271,17 @@
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
+
+    // Mulai monitor room setelah Firebase siap.
+    setLobbyMessage("Menghubungkan ke server room...");
+    watchRoomList();
+
+    if (!window.SpeechRecognition) {
+        console.warn("Speech Recognition tidak tersedia pada browser ini.");
+    }
+
 </script>
 
 </body>
