@@ -465,6 +465,8 @@
                     <option value="zh-CN">Mandarin (中文)</option>
                     <option value="vi-VN">Vietnamese</option>
                     <option value="th-TH">Thai</option>
+                    <option value="ko-KR">Korean (한국어)</option>
+                    <option value="ar-SA">Arabic (العربية)</option>
                 </select>
             </div>
         </div>
@@ -478,6 +480,8 @@
                     <option value="zh">Chinese (Mandarin)</option>
                     <option value="vi">Vietnamese</option>
                     <option value="th">Thai</option>
+                    <option value="ko">Korean (한국어)</option>
+                    <option value="ar">Arabic (العربية)</option>
                 </select>
             </div>
         </div>
@@ -523,6 +527,200 @@
     </div>
 </div>
 
+<!-- Local AI Meeting Summarizer: browser-local, free, no API key -->
+<script type="module">
+    // ============================================================
+    // LOCAL AI MEETING RESUME
+    // Qwen2.5-0.5B-Instruct + Transformers.js
+    // Tidak membutuhkan API key. Inference dilakukan di browser.
+    // ============================================================
+    import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm";
+
+    let localMeetingSummarizer = null;
+    let localMeetingSummarizerPromise = null;
+
+    async function getLocalMeetingSummarizer() {
+        if (localMeetingSummarizer) return localMeetingSummarizer;
+        if (localMeetingSummarizerPromise) return localMeetingSummarizerPromise;
+
+        localMeetingSummarizerPromise = (async () => {
+            const modelId = "onnx-community/Qwen2.5-0.5B-Instruct";
+            try {
+                localMeetingSummarizer = await pipeline("text-generation", modelId, {
+                    dtype: "q4",
+                    ...(navigator.gpu ? { device: "webgpu" } : {})
+                });
+            } catch (error1) {
+                console.warn("Local AI WebGPU gagal, mencoba WASM:", error1);
+                localMeetingSummarizer = await pipeline("text-generation", modelId, {
+                    dtype: "q4",
+                    device: "wasm"
+                });
+            }
+            return localMeetingSummarizer;
+        })();
+
+        try {
+            return await localMeetingSummarizerPromise;
+        } finally {
+            localMeetingSummarizerPromise = null;
+        }
+    }
+
+    function extractGeneratedText(result) {
+        if (!Array.isArray(result) || !result[0]) return "";
+        const generated = result[0].generated_text;
+        if (typeof generated === "string") return generated.trim();
+        if (Array.isArray(generated)) {
+            const last = generated[generated.length - 1];
+            if (last && typeof last.content === "string") return last.content.trim();
+        }
+        return "";
+    }
+
+    function cleanJsonText(text) {
+        if (!text) return "";
+        let value = text.trim();
+        value = value.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
+        const first = value.indexOf("{");
+        const last = value.lastIndexOf("}");
+        if (first >= 0 && last > first) value = value.slice(first, last + 1);
+        return value;
+    }
+
+    async function runLocalSummary(prompt, maxTokens = 500) {
+        const generator = await getLocalMeetingSummarizer();
+        const messages = [
+            {
+                role: "system",
+                content: "Anda adalah sekretaris meeting profesional. Gunakan HANYA informasi yang ada di transkrip. Jangan mengarang nama, keputusan, angka, jadwal, atau tindakan yang tidak disebutkan. Jawab ringkas dan faktual."
+            },
+            { role: "user", content: prompt }
+        ];
+
+        const result = await generator(messages, {
+            max_new_tokens: maxTokens,
+            do_sample: false,
+            return_full_text: false
+        });
+
+        return extractGeneratedText(result);
+    }
+
+    async function summarizeChunk(chunk) {
+        const prompt = `Buat ringkasan sementara dari bagian transkrip meeting berikut.
+
+Kembalikan HANYA JSON valid tanpa markdown:
+{
+  "summary": "Ringkasan singkat dalam Bahasa Indonesia",
+  "conclusion": "Kesimpulan dari bagian ini",
+  "decisions": ["Keputusan yang benar-benar disebutkan"],
+  "actions": ["Tindak lanjut yang benar-benar disebutkan"]
+}
+
+Jika tidak ada keputusan atau tindak lanjut, gunakan array kosong.
+
+TRANSKRIP:
+${chunk}`;
+
+        const raw = await runLocalSummary(prompt, 450);
+        const json = cleanJsonText(raw);
+        try {
+            return JSON.parse(json);
+        } catch (e) {
+            console.warn("JSON chunk resume tidak valid:", raw);
+            return {
+                summary: "",
+                conclusion: "",
+                decisions: [],
+                actions: []
+            };
+        }
+    }
+
+    function chunkTranscript(text, maxChars = 7000) {
+        const lines = String(text || "").split("\n").filter(Boolean);
+        const chunks = [];
+        let current = "";
+
+        for (const line of lines) {
+            if ((current.length + line.length + 1) > maxChars && current) {
+                chunks.push(current);
+                current = "";
+            }
+            current += (current ? "\n" : "") + line;
+        }
+        if (current) chunks.push(current);
+        return chunks;
+    }
+
+    function uniqueStrings(values) {
+        return [...new Set((values || [])
+            .map(v => String(v || "").trim())
+            .filter(Boolean))];
+    }
+
+    window.generateMeetingResumeLocal = async function(transcript) {
+        if (!transcript || !transcript.trim()) return null;
+
+        // Meeting panjang 2–3 jam dapat melebihi context model.
+        // Karena itu transcript dipecah menjadi beberapa bagian dahulu.
+        const chunks = chunkTranscript(transcript, 7000);
+        const partials = [];
+
+        for (const chunk of chunks) {
+            const part = await summarizeChunk(chunk);
+            if (part.summary || part.conclusion || part.decisions?.length || part.actions?.length) {
+                partials.push(part);
+            }
+        }
+
+        if (!partials.length) throw new Error("Local AI tidak menghasilkan ringkasan.");
+
+        const compact = partials.map((p, i) =>
+            `BAGIAN ${i + 1}\nRingkasan: ${p.summary || ""}\nKesimpulan: ${p.conclusion || ""}\nKeputusan: ${(p.decisions || []).join("; ")}\nTindak lanjut: ${(p.actions || []).join("; ")}`
+        ).join("\n\n");
+
+        const finalPrompt = `Gabungkan ringkasan bagian meeting berikut menjadi satu resume meeting yang profesional.
+
+Kembalikan HANYA JSON valid tanpa markdown:
+{
+  "id": "Resume meeting Bahasa Indonesia",
+  "conclusion": "Kesimpulan utama meeting dalam Bahasa Indonesia",
+  "decisions": ["Keputusan penting yang benar-benar didukung isi meeting"],
+  "actions": ["Tindak lanjut penting yang benar-benar didukung isi meeting"]
+}
+
+Jangan mengarang informasi. Jika tidak ada keputusan/tindak lanjut, array harus kosong.
+
+RINGKASAN BAGIAN MEETING:
+${compact}`;
+
+        let finalRaw = await runLocalSummary(finalPrompt, 600);
+        let finalJson;
+        try {
+            finalJson = JSON.parse(cleanJsonText(finalRaw));
+        } catch (e) {
+            // Fallback: gunakan hasil map jika model kecil gagal membuat JSON final.
+            finalJson = {
+                id: partials.map(p => p.summary).filter(Boolean).join(" "),
+                conclusion: partials.map(p => p.conclusion).filter(Boolean).join(" "),
+                decisions: uniqueStrings(partials.flatMap(p => p.decisions || [])),
+                actions: uniqueStrings(partials.flatMap(p => p.actions || []))
+            };
+        }
+
+        return {
+            id: finalJson.id || "",
+            en: "",
+            ja: "",
+            conclusion: finalJson.conclusion || "",
+            decisions: uniqueStrings(finalJson.decisions),
+            actions: uniqueStrings(finalJson.actions)
+        };
+    };
+</script>
+
 <!-- Firebase SDK Compat -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -552,6 +750,8 @@
     let isMuted = false;
     let chatHistory = [];
     let translationCache = new Map();
+    let latestMeetingResume = null;
+    let meetingResumePromise = null;
 
     let currentRoomId = null;
     let currentRoomCode = null;
@@ -566,6 +766,20 @@
     // Timer ini melakukan restart terkontrol tanpa mematikan fitur recording user.
     let recognitionRestartTimer = null;
     let recognitionGeneration = 0;
+
+    // Anti-duplicate / live-message control.
+    // Pesan lama dari Firebase tetap ditampilkan, tetapi TIDAK dibacakan ulang.
+    let roomSpeechStartAt = 0;
+    const processedMessageIds = new Set();
+    const recentSpeechKeys = new Map();
+    const recentRecognitionKeys = new Map();
+    const RECOGNITION_DEDUPE_MS = 7000;
+    const SPEECH_DEDUPE_MS = 8000;
+
+    // TTS dibuat menjadi queue sendiri agar speechSynthesis tidak menumpuk
+    // puluhan utterance ketika meeting ramai.
+    const ttsQueue = [];
+    let ttsBusy = false;
 
     const actionBtn = document.getElementById('actionBtn');
     const btnText = document.getElementById('btnText');
@@ -784,6 +998,12 @@
                 roomCodeBox.style.display = 'none';
             }
 
+            // Setelah listener dipasang, pesan baru dianggap LIVE.
+            // Histori lama tetap ditampilkan tetapi tidak dibacakan.
+            roomSpeechStartAt = Date.now();
+            processedMessageIds.clear();
+            recentSpeechKeys.clear();
+            recentRecognitionKeys.clear();
             attachRoomListeners();
             watchCurrentRoomMembers();
         } catch (error) {
@@ -811,6 +1031,25 @@
         });
     }
 
+    function normalizeSpeechKey(text) {
+        return String(text || "")
+            .toLowerCase()
+            .replace(/[\u200B-\u200D\uFEFF]/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function isRecentDuplicate(map, key, windowMs) {
+        const now = Date.now();
+        const previous = map.get(key) || 0;
+        if (previous && (now - previous) < windowMs) return true;
+        map.set(key, now);
+        for (const [k, t] of map) {
+            if ((now - t) > windowMs * 2) map.delete(k);
+        }
+        return false;
+    }
+
     function attachRoomListeners() {
         if (!roomMessagesRef || roomListenersAttached) return;
         roomListenersAttached = true;
@@ -818,6 +1057,11 @@
         roomMessagesRef.on('child_added', async snapshot => {
             const data = snapshot.val();
             if (!data) return;
+
+            const messageId = String(data.id || snapshot.key);
+            // Firebase child_added dapat mengirim ulang data yang sudah ada.
+            if (processedMessageIds.has(messageId)) return;
+            processedMessageIds.add(messageId);
 
             const targetLangCode = targetLangSelect.value;
             const sourceLangCode = data.sourceLang || 'en';
@@ -828,7 +1072,7 @@
             }
 
             const msgId = appendOrUpdateLiveChat(
-                data.id || snapshot.key,
+                messageId,
                 data.date || '',
                 data.time || '',
                 data.original || '',
@@ -849,16 +1093,25 @@
                 updateLiveChat(msgId, data.date, data.time, data.original, translatedText, sourceLangCode, targetLangCode);
 
                 chatHistory.push({
+                    id: messageId,
                     date: data.date,
                     time: data.time,
                     original: data.original,
                     sourceLang: sourceLangCode,
                     translated: translatedText,
-                    targetLang: targetLangCode
+                    targetLang: targetLangCode,
+                    timestamp: Number(data.timestamp || 0)
                 });
 
-                if (sourceLangCode.toLowerCase() !== targetLangCode.toLowerCase()) {
-                    speakText(translatedText, targetLangCode);
+                // Hanya pesan LIVE yang datang setelah user masuk room yang dibacakan.
+                // Histori meeting tidak boleh memicu suara berulang.
+                const messageTime = Number(data.timestamp || 0);
+                const isLiveMessage = messageTime >= roomSpeechStartAt;
+                const sameText = normalizeSpeechKey(translatedText);
+                const duplicateSpeech = isRecentDuplicate(recentSpeechKeys, `${targetLangCode}|${sameText}`, SPEECH_DEDUPE_MS);
+
+                if (isLiveMessage && !duplicateSpeech && sourceLangCode.toLowerCase() !== targetLangCode.toLowerCase()) {
+                    enqueueSpeech(translatedText, targetLangCode, messageId);
                 }
             } catch (err) {
                 console.error("Translation Error:", err);
@@ -869,6 +1122,7 @@
         roomMessagesRef.on('value', snapshot => {
             if (!snapshot.exists() && currentRoomId) {
                 chatHistory = [];
+                processedMessageIds.clear();
                 transcriptBox.innerHTML = '<div class="transcript-placeholder">Belum ada percakapan di room ini.</div>';
             }
         });
@@ -924,7 +1178,14 @@
         roomMetaRef = null;
         roomMembersRef = null;
         chatHistory = [];
+        latestMeetingResume = null;
+        meetingResumePromise = null;
         translationCache.clear();
+        processedMessageIds.clear();
+        recentSpeechKeys.clear();
+        recentRecognitionKeys.clear();
+        roomSpeechStartAt = 0;
+        stopTTSQueue();
         roomCodeBox.style.display = 'none';
         roomSessionBar.style.display = 'none';
         translatorApp.style.display = 'none';
@@ -965,6 +1226,7 @@
         if (confirm("Apakah Anda yakin ingin menghapus SEMUA riwayat meeting di room ini untuk semua perangkat yang terhubung?")) {
             roomMessagesRef.remove().then(() => {
                 chatHistory = [];
+                latestMeetingResume = null;
                 transcriptBox.innerHTML = '<div class="transcript-placeholder">Semua riwayat meeting telah dihapus.</div>';
                 alert("Riwayat meeting berhasil dibersihkan dari server untuk room ini.");
             }).catch(error => {
@@ -1004,6 +1266,7 @@
         if (isRunning) return;
 
         isRunning = true;
+        warmUpSpeechEngine();
         recognitionGeneration++;
         const generation = recognitionGeneration;
 
@@ -1050,6 +1313,13 @@
 
                         const speechText = result[0].transcript.trim();
                         if (!speechText) continue;
+
+                        // Chrome dapat mengembalikan final transcript yang sama saat
+                        // sesi SpeechRecognition direstart. Jangan kirim ulang ke Firebase.
+                        const recognitionKey = normalizeSpeechKey(speechText);
+                        if (isRecentDuplicate(recentRecognitionKeys, recognitionKey, RECOGNITION_DEDUPE_MS)) {
+                            continue;
+                        }
 
                         const sourceLangCode = sourceLangSelect.value.split('-')[0];
                         const now = new Date();
@@ -1153,6 +1423,7 @@
         statusBadge.style.display = 'none';
         recordingInfo.style.display = 'none';
         sourceLangSelect.disabled = false;
+        if (!leavingRoom && chatHistory.length > 0) autoGenerateMeetingResume();
     }
 
     async function translateText(text, sourceLang, targetLang) {
@@ -1209,28 +1480,182 @@
         }[ch]));
     }
 
-    function speakText(text, langCode) {
-        if (!('speechSynthesis' in window)) return;
-        let bcp47 = 'en-US';
-        if (langCode === 'id') bcp47 = 'id-ID';
-        else if (langCode === 'ja') bcp47 = 'ja-JP';
-        else if (langCode === 'zh') bcp47 = 'zh-CN';
-        else if (langCode === 'vi') bcp47 = 'vi-VN';
-        else if (langCode === 'th') bcp47 = 'th-TH';
+    // ============================================================
+    // TTS ENGINE
+    // ============================================================
+    let speechVoices = [];
 
-        try {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = bcp47;
-            window.speechSynthesis.speak(utterance);
-        } catch (e) {
-            console.warn("Speech synthesis:", e);
+    function refreshSpeechVoices() {
+        if ('speechSynthesis' in window) {
+            speechVoices = window.speechSynthesis.getVoices() || [];
+        }
+        return speechVoices;
+    }
+
+    if ('speechSynthesis' in window) {
+        refreshSpeechVoices();
+        window.speechSynthesis.onvoiceschanged = refreshSpeechVoices;
+    }
+
+    function findSpeechVoice(bcp47) {
+        refreshSpeechVoices();
+        const exact = speechVoices.find(v => v.lang && v.lang.toLowerCase() === bcp47.toLowerCase());
+        if (exact) return exact;
+
+        const base = bcp47.slice(0, 2).toLowerCase();
+        return speechVoices.find(v => v.lang && v.lang.toLowerCase().startsWith(base));
+    }
+
+    function stopTTSQueue() {
+        ttsQueue.length = 0;
+        ttsBusy = false;
+        if ('speechSynthesis' in window) {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
         }
     }
 
-    function saveNotulenToWord() {
+    function processTTSQueue() {
+        if (ttsBusy || !ttsQueue.length || !('speechSynthesis' in window)) return;
+
+        const item = ttsQueue.shift();
+        ttsBusy = true;
+
+        const utterance = new SpeechSynthesisUtterance(item.text);
+        utterance.lang = item.bcp47;
+        utterance.rate = 0.98;
+        utterance.pitch = 1.0;
+
+        const voice = findSpeechVoice(item.bcp47);
+        if (voice) utterance.voice = voice;
+
+        const finish = () => {
+            ttsBusy = false;
+            setTimeout(processTTSQueue, 80);
+        };
+
+        utterance.onend = finish;
+        utterance.onerror = finish;
+
+        try {
+            window.speechSynthesis.resume();
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.warn("Speech synthesis:", e);
+            finish();
+        }
+    }
+
+    function enqueueSpeech(text, langCode, messageId) {
+        if (!text || !('speechSynthesis' in window)) return;
+
+        const voiceMap = {
+            id: 'id-ID', en: 'en-US', ja: 'ja-JP', zh: 'zh-CN',
+            vi: 'vi-VN', th: 'th-TH', ko: 'ko-KR', ar: 'ar-SA'
+        };
+        const bcp47 = voiceMap[langCode] || langCode || 'en-US';
+
+        // Jangan masukkan message yang sama dua kali.
+        if (ttsQueue.some(x => x.messageId === messageId)) return;
+
+        // Jangan biarkan queue menumpuk tanpa batas pada meeting panjang.
+        // Maksimal 4 item menunggu; item terbaru lebih berguna daripada histori lama.
+        if (ttsQueue.length >= 4) ttsQueue.shift();
+        ttsQueue.push({ text: String(text), bcp47, messageId });
+        processTTSQueue();
+    }
+
+    // Dipertahankan sebagai compatibility wrapper untuk logic lama.
+    function speakText(text, langCode) {
+        enqueueSpeech(text, langCode, 'manual-' + Date.now());
+    }
+
+    function warmUpSpeechEngine() {
+        if (!('speechSynthesis' in window)) return;
+        refreshSpeechVoices();
+        try { window.speechSynthesis.resume(); } catch (e) {}
+    }
+
+    function getOriginalTranscriptForResume() {
+        const source = Array.isArray(chatHistory) ? chatHistory : [];
+        const seen = new Set();
+
+        return source.map((item, index) => {
+            const key = String(item.id || `${item.date}|${item.time}|${item.original}`);
+            if (seen.has(key)) return null;
+            seen.add(key);
+            return `[${index + 1}] ${item.date || ''} ${item.time || ''} | ${item.sourceLang || ''}: ${item.original || ''}`;
+        }).filter(Boolean).join('\n');
+    }
+
+    async function translateResumeFields(resume) {
+        if (!resume) return null;
+
+        // Resume dibuat oleh AI lokal dalam Bahasa Indonesia.
+        // English/Japanese adalah translasi dari resume AI tersebut, bukan dari transcript mentah.
+        const translateSafe = async (text, target) => {
+            if (!text) return '';
+            try {
+                return await translateText(text, 'id', target);
+            } catch (e) {
+                console.warn('Resume translation failed:', target, e);
+                return '';
+            }
+        };
+
+        const idSections = [
+            resume.id || '',
+            resume.conclusion ? `Kesimpulan: ${resume.conclusion}` : '',
+            resume.decisions?.length ? `Keputusan: ${resume.decisions.join('; ')}` : '',
+            resume.actions?.length ? `Tindak lanjut: ${resume.actions.join('; ')}` : ''
+        ].filter(Boolean).join('\n');
+
+        resume.en = await translateSafe(idSections, 'en');
+        resume.ja = await translateSafe(idSections, 'ja');
+        return resume;
+    }
+
+    async function generateMeetingResume(force = false) {
+        const transcript = getOriginalTranscriptForResume();
+        if (!transcript.trim() || typeof window.generateMeetingResumeLocal !== 'function') return null;
+        if (!force && latestMeetingResume) return latestMeetingResume;
+        if (meetingResumePromise) return meetingResumePromise;
+
+        meetingResumePromise = (async () => {
+            try {
+                const resume = await window.generateMeetingResumeLocal(transcript);
+                latestMeetingResume = await translateResumeFields(resume);
+                return latestMeetingResume;
+            } catch (error) {
+                console.error("Local Meeting Resume Error:", error);
+                latestMeetingResume = null;
+                return null;
+            } finally {
+                meetingResumePromise = null;
+            }
+        })();
+
+        return meetingResumePromise;
+    }
+
+    async function autoGenerateMeetingResume() {
+        if (!chatHistory.length || leavingRoom) return;
+        // Jangan memblokir stop recording. AI berjalan setelah recording berhenti.
+        await generateMeetingResume(true);
+    }
+
+    function resumeParagraph(text) {
+        return escapeHtml(String(text || '')).replace(/\n/g, '<br>');
+    }
+
+    async function saveNotulenToWord() {
         if (chatHistory.length === 0) {
             alert("Tidak ada riwayat percakapan untuk disimpan!");
             return;
+        }
+
+        const resume = await generateMeetingResume(true);
+        if (!resume) {
+            alert("AI Resume belum berhasil dibuat. Pastikan koneksi internet aktif saat model AI pertama kali dimuat, lalu coba Save Minutes kembali.");
         }
 
         const now = new Date();
@@ -1251,12 +1676,32 @@
                 <hr style="border: 1px solid #cbd5e1; margin-bottom: 20px;">
         `;
 
+        if (resume) {
+            htmlContent += `
+                <h3 style="color:#6366f1;">RESUME MEETING — Bahasa Indonesia</h3>
+                <p>${resumeParagraph(resume.id)}</p>
+                <h3 style="color:#6366f1;">KESIMPULAN</h3>
+                <p>${resumeParagraph(resume.conclusion)}</p>
+                <h3 style="color:#6366f1;">KEPUTUSAN</h3>
+                <ul>${(resume.decisions || []).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>
+                <h3 style="color:#6366f1;">TINDAK LANJUT</h3>
+                <ul>${(resume.actions || []).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>
+                <h3 style="color:#6366f1;">MEETING RESUME — English</h3>
+                <p>${resumeParagraph(resume.en)}</p>
+                <h3 style="color:#6366f1;">会議要約 — 日本語</h3>
+                <p>${resumeParagraph(resume.ja)}</p>
+                <hr style="border: 1px solid #cbd5e1; margin: 20px 0;">
+            `;
+        }
+
+        htmlContent += `<h3 style="color:#6366f1;">TRANSKRIP ASLI</h3>`;
+
         chatHistory.forEach((item, index) => {
             htmlContent += `
                 <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #e2e8f0; background-color: #f8fafc;">
-                    <p style="font-size: 11px; color: #64748b; margin: 0 0 4px 0;"><b>[${index + 1}] Waktu:</b> ${escapeHtml(item.date)} ${escapeHtml(item.time)} | <b>Sumber:</b> ${escapeHtml(item.sourceLang.toUpperCase())}</p>
+                    <p style="font-size: 11px; color: #64748b; margin: 0 0 4px 0;"><b>[${index + 1}] Waktu:</b> ${escapeHtml(item.date)} ${escapeHtml(item.time)} | <b>Sumber:</b> ${escapeHtml(String(item.sourceLang || '').toUpperCase())}</p>
                     <p style="font-size: 13px; margin: 0 0 4px 0;"><b>Original:</b> "${escapeHtml(item.original)}"</p>
-                    <p style="font-size: 14px; color: #6366f1; margin: 0; font-weight: bold;"><b>Terjemahan (${escapeHtml(item.targetLang.toUpperCase())}):</b> ${escapeHtml(item.translated)}</p>
+                    <p style="font-size: 14px; color: #6366f1; margin: 0; font-weight: bold;"><b>Terjemahan (${escapeHtml(String(item.targetLang || '').toUpperCase())}):</b> ${escapeHtml(item.translated)}</p>
                 </div>
             `;
         });
