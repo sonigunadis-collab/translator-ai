@@ -1647,77 +1647,200 @@ ${compact}`;
         return escapeHtml(String(text || '')).replace(/\n/g, '<br>');
     }
 
-    async function saveNotulenToWord() {
-        if (chatHistory.length === 0) {
-            alert("Tidak ada riwayat percakapan untuk disimpan!");
-            return;
-        }
+    // ============================================================
+    // SAVE MINUTES — LOCAL AI + FILE SYSTEM ACCESS
+    // IMPORTANT:
+    // 1) File picker dibuka SEBELUM await AI agar Chrome tidak memblokir save.
+    // 2) AI resume tetap berjalan lokal di browser.
+    // 3) Logic meeting/Firebase/translator tidak disentuh.
+    // ============================================================
+    let saveMinutesBusy = false;
 
-        const resume = await generateMeetingResume(true);
-        if (!resume) {
-            alert("AI Resume belum berhasil dibuat. Pastikan koneksi internet aktif saat model AI pertama kali dimuat, lalu coba Save Minutes kembali.");
-        }
-
-        const now = new Date();
+    function buildMeetingMinutesHtml(resume, now) {
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
         const hour = String(now.getHours()).padStart(2, '0');
         const minute = String(now.getMinutes()).padStart(2, '0');
 
-        const fileName = `Notulen-Resume-${year}${month}${day}-${hour}${minute}.doc`;
+        const roomText = currentRoomLabel ? currentRoomLabel.textContent : 'Meeting Room';
 
         let htmlContent = `
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-            <head><meta charset='utf-8'><title>AI Meeting Minutes</title></head>
-            <body style="font-family: Arial, sans-serif;">
-                <h2 style="color: #6366f1; text-align: center;">AI MEETING MINUTES & LIVE TRANSLATION RESUME</h2>
-                <p style="text-align: center; color: #64748b;">Room: ${escapeHtml(currentRoomLabel.textContent)} | Tanggal: ${day}-${month}-${year} | Jam: ${hour}:${minute}</p>
-                <hr style="border: 1px solid #cbd5e1; margin-bottom: 20px;">
+            <html xmlns:o='urn:schemas-microsoft-com:office:office'
+                  xmlns:w='urn:schemas-microsoft-com:office:word'
+                  xmlns='http://www.w3.org/TR/REC-html40'>
+            <head>
+                <meta charset='utf-8'>
+                <title>AI Meeting Minutes</title>
+                <style>
+                    body { font-family: Arial, sans-serif; color:#1e293b; line-height:1.5; }
+                    h2 { color:#6366f1; text-align:center; }
+                    h3 { color:#6366f1; margin-top:22px; }
+                    .meta { text-align:center; color:#64748b; }
+                    .transcript-item { margin-bottom:15px; padding:10px; border:1px solid #e2e8f0; background:#f8fafc; }
+                    .small { font-size:11px; color:#64748b; }
+                    .original { font-size:13px; }
+                    .translation { font-size:14px; color:#6366f1; font-weight:bold; }
+                </style>
+            </head>
+            <body>
+                <h2>AI MEETING MINUTES &amp; LIVE TRANSLATION RESUME</h2>
+                <p class="meta">Room: ${escapeHtml(roomText)} | Tanggal: ${day}-${month}-${year} | Jam: ${hour}:${minute}</p>
+                <hr>
         `;
 
         if (resume) {
             htmlContent += `
-                <h3 style="color:#6366f1;">RESUME MEETING — Bahasa Indonesia</h3>
-                <p>${resumeParagraph(resume.id)}</p>
-                <h3 style="color:#6366f1;">KESIMPULAN</h3>
-                <p>${resumeParagraph(resume.conclusion)}</p>
-                <h3 style="color:#6366f1;">KEPUTUSAN</h3>
-                <ul>${(resume.decisions || []).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>
-                <h3 style="color:#6366f1;">TINDAK LANJUT</h3>
-                <ul>${(resume.actions || []).map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>
-                <h3 style="color:#6366f1;">MEETING RESUME — English</h3>
-                <p>${resumeParagraph(resume.en)}</p>
-                <h3 style="color:#6366f1;">会議要約 — 日本語</h3>
-                <p>${resumeParagraph(resume.ja)}</p>
-                <hr style="border: 1px solid #cbd5e1; margin: 20px 0;">
+                <h3>RESUME MEETING — Bahasa Indonesia</h3>
+                <p>${resumeParagraph(resume.id || resume.summary || 'Resume belum tersedia.')}</p>
+
+                <h3>KESIMPULAN</h3>
+                <p>${resumeParagraph(resume.conclusion || 'Tidak ada kesimpulan yang terdeteksi.')}</p>
+
+                <h3>KEPUTUSAN</h3>
+                ${resume.decisions && resume.decisions.length
+                    ? `<ul>${resume.decisions.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`
+                    : '<p>Tidak ada keputusan yang terdeteksi.</p>'}
+
+                <h3>TINDAK LANJUT</h3>
+                ${resume.actions && resume.actions.length
+                    ? `<ul>${resume.actions.map(x => `<li>${escapeHtml(x)}</li>`).join('')}</ul>`
+                    : '<p>Tidak ada tindak lanjut yang terdeteksi.</p>'}
+
+                <h3>MEETING RESUME — English</h3>
+                <p>${resumeParagraph(resume.en || 'English resume belum tersedia.')}</p>
+
+                <h3>会議要約 — 日本語</h3>
+                <p>${resumeParagraph(resume.ja || '日本語の要約はまだありません。')}</p>
+
+                <hr>
             `;
         }
 
-        htmlContent += `<h3 style="color:#6366f1;">TRANSKRIP ASLI</h3>`;
+        htmlContent += `<h3>TRANSKRIP ASLI</h3>`;
 
+        const unique = new Set();
         chatHistory.forEach((item, index) => {
+            const key = String(item.id || `${item.date}|${item.time}|${item.original}`);
+            if (unique.has(key)) return;
+            unique.add(key);
+
             htmlContent += `
-                <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #e2e8f0; background-color: #f8fafc;">
-                    <p style="font-size: 11px; color: #64748b; margin: 0 0 4px 0;"><b>[${index + 1}] Waktu:</b> ${escapeHtml(item.date)} ${escapeHtml(item.time)} | <b>Sumber:</b> ${escapeHtml(String(item.sourceLang || '').toUpperCase())}</p>
-                    <p style="font-size: 13px; margin: 0 0 4px 0;"><b>Original:</b> "${escapeHtml(item.original)}"</p>
-                    <p style="font-size: 14px; color: #6366f1; margin: 0; font-weight: bold;"><b>Terjemahan (${escapeHtml(String(item.targetLang || '').toUpperCase())}):</b> ${escapeHtml(item.translated)}</p>
+                <div class="transcript-item">
+                    <p class="small"><b>[${index + 1}] Waktu:</b> ${escapeHtml(item.date || '')} ${escapeHtml(item.time || '')} | <b>Sumber:</b> ${escapeHtml(String(item.sourceLang || '').toUpperCase())}</p>
+                    <p class="original"><b>Original:</b> "${escapeHtml(item.original || '')}"</p>
+                    <p class="translation"><b>Terjemahan (${escapeHtml(String(item.targetLang || '').toUpperCase())}):</b> ${escapeHtml(item.translated || '')}</p>
                 </div>
             `;
         });
 
         htmlContent += `</body></html>`;
-
-        const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        return htmlContent;
     }
+
+    async function saveNotulenToWord() {
+        if (saveMinutesBusy) return;
+
+        if (!Array.isArray(chatHistory) || chatHistory.length === 0) {
+            alert("Tidak ada riwayat percakapan untuk disimpan!");
+            return;
+        }
+
+        saveMinutesBusy = true;
+        const saveBtn = document.getElementById('saveBtn');
+        const originalButtonHtml = saveBtn ? saveBtn.innerHTML : '';
+
+        try {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            const fileName = `Notulen-Resume-${year}${month}${day}-${hour}${minute}.doc`;
+
+            // Chrome mengharuskan showSaveFilePicker dipanggil langsung dari
+            // aksi user. Karena itu picker dibuka SEBELUM proses AI yang async.
+            let fileHandle = null;
+            if ('showSaveFilePicker' in window) {
+                try {
+                    fileHandle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'Microsoft Word Document',
+                            accept: { 'application/msword': ['.doc'] }
+                        }]
+                    });
+                } catch (pickerError) {
+                    // User menekan Cancel. Jangan dianggap sebagai error aplikasi.
+                    if (pickerError && pickerError.name === 'AbortError') return;
+                    console.warn('File picker gagal, gunakan fallback download:', pickerError);
+                }
+            }
+
+            if (saveBtn) {
+                saveBtn.innerHTML = '<span>⏳ Membuat Resume AI Lokal...</span>';
+                saveBtn.disabled = true;
+                saveBtn.style.pointerEvents = 'none';
+            }
+
+            // Generate resume sepenuhnya dari transcript yang sudah ada.
+            // Tidak memulai recording baru dan tidak mengubah Firebase.
+            let resume = null;
+            try {
+                resume = await generateMeetingResume(true);
+            } catch (aiError) {
+                console.error('Generate local resume error:', aiError);
+            }
+
+            if (!resume) {
+                // Jangan menghilangkan fungsi Save hanya karena AI gagal.
+                // Transkrip tetap bisa disimpan, tetapi user diberi tahu.
+                alert('AI lokal belum berhasil membuat resume. File tetap akan disimpan dengan transkrip asli. Coba lagi setelah model AI selesai dimuat.');
+            }
+
+            const htmlContent = buildMeetingMinutesHtml(resume, now);
+            const data = '\ufeff' + htmlContent;
+
+            if (fileHandle) {
+                const writable = await fileHandle.createWritable();
+                await writable.write(data);
+                await writable.close();
+                alert('Minutes berhasil disimpan:\n' + fileName);
+                return;
+            }
+
+            // Fallback untuk browser yang tidak mendukung File System Access API.
+            // Ini tetap mempertahankan download .doc seperti logic lama.
+            const blob = new Blob([data], { type: 'application/msword;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }, 1000);
+
+        } catch (error) {
+            console.error('Save Minutes Error:', error);
+            alert('Gagal menyimpan Minutes: ' + (error && error.message ? error.message : error));
+        } finally {
+            saveMinutesBusy = false;
+            const saveBtnRestore = document.getElementById('saveBtn');
+            if (saveBtnRestore) {
+                saveBtnRestore.innerHTML = originalButtonHtml || '<span>💾 Save Minutes to Word</span>';
+                saveBtnRestore.disabled = false;
+                saveBtnRestore.style.pointerEvents = '';
+            }
+        }
+    }
+
+    // Pastikan tetap tersedia untuk inline onclick pada HTML.
+    window.saveNotulenToWord = saveNotulenToWord;
 
     // Mulai monitor room setelah Firebase siap.
     setLobbyMessage("Menghubungkan ke server room...");
