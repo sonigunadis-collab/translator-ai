@@ -660,7 +660,7 @@ ${chunk}`;
             .filter(Boolean))];
     }
 
-    window.generateMeetingResumeLocal = async function(transcript) {
+    window.generateMeetingResumeLocal = async function(transcript, onProgress = null) {
         if (!transcript || !transcript.trim()) return null;
 
         // Meeting panjang 2–3 jam dapat melebihi context model.
@@ -668,7 +668,18 @@ ${chunk}`;
         const chunks = chunkTranscript(transcript, 7000);
         const partials = [];
 
-        for (const chunk of chunks) {
+        if (typeof onProgress === 'function') onProgress(3, `🧠 Memuat AI lokal...`);
+
+        for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+            const chunk = chunks[chunkIndex];
+            const totalChunks = chunks.length;
+            const startPercent = 8;
+            const endPercent = 78;
+            const percent = Math.max(startPercent, Math.min(endPercent,
+                Math.round(startPercent + ((chunkIndex + 1) / totalChunks) * (endPercent - startPercent))));
+            if (typeof onProgress === 'function') {
+                onProgress(percent, `Menganalisis bagian ${chunkIndex + 1} dari ${totalChunks}...`);
+            }
             const part = await summarizeChunk(chunk);
             if (part.summary || part.conclusion || part.decisions?.length || part.actions?.length) {
                 partials.push(part);
@@ -696,6 +707,7 @@ Jangan mengarang informasi. Jika tidak ada keputusan/tindak lanjut, array harus 
 RINGKASAN BAGIAN MEETING:
 ${compact}`;
 
+        if (typeof onProgress === 'function') onProgress(84, '🧠 Menyusun resume akhir meeting...');
         let finalRaw = await runLocalSummary(finalPrompt, 600);
         let finalJson;
         try {
@@ -709,6 +721,8 @@ ${compact}`;
                 actions: uniqueStrings(partials.flatMap(p => p.actions || []))
             };
         }
+
+        if (typeof onProgress === 'function') onProgress(90, '🌐 Menyiapkan English & Japanese...');
 
         return {
             id: finalJson.id || "",
@@ -1614,7 +1628,7 @@ ${compact}`;
         return resume;
     }
 
-    async function generateMeetingResume(force = false) {
+    async function generateMeetingResume(force = false, onProgress = null) {
         const transcript = getOriginalTranscriptForResume();
         if (!transcript.trim() || typeof window.generateMeetingResumeLocal !== 'function') return null;
         if (!force && latestMeetingResume) return latestMeetingResume;
@@ -1622,8 +1636,10 @@ ${compact}`;
 
         meetingResumePromise = (async () => {
             try {
-                const resume = await window.generateMeetingResumeLocal(transcript);
+                const resume = await window.generateMeetingResumeLocal(transcript, onProgress);
+                if (typeof onProgress === 'function') onProgress(93, '🌐 Menerjemahkan resume ke English...');
                 latestMeetingResume = await translateResumeFields(resume);
+                if (typeof onProgress === 'function') onProgress(100, '✅ Resume AI selesai. Menyimpan dokumen...');
                 return latestMeetingResume;
             } catch (error) {
                 console.error("Local Meeting Resume Error:", error);
@@ -1655,6 +1671,47 @@ ${compact}`;
     // 3) Logic meeting/Firebase/translator tidak disentuh.
     // ============================================================
     let saveMinutesBusy = false;
+
+    // Status sementara khusus proses Save/Resume. Tidak mengubah layout utama;
+    // elemen ini hanya muncul ketika AI lokal sedang bekerja.
+    let resumeProgressEl = null;
+
+    function showResumeProgress(percent, message) {
+        if (!resumeProgressEl) {
+            resumeProgressEl = document.createElement('div');
+            resumeProgressEl.id = 'localAiProgress';
+            resumeProgressEl.setAttribute('role', 'status');
+            resumeProgressEl.setAttribute('aria-live', 'polite');
+            resumeProgressEl.style.cssText = [
+                'position:fixed', 'right:20px', 'bottom:20px', 'width:330px',
+                'max-width:calc(100vw - 40px)', 'padding:14px 16px', 'z-index:99999',
+                'background:rgba(15,23,42,.96)', 'border:1px solid rgba(99,102,241,.55)',
+                'border-radius:12px', 'box-shadow:0 12px 35px rgba(0,0,0,.45)',
+                'backdrop-filter:blur(12px)', '-webkit-backdrop-filter:blur(12px)',
+                'font-family:Arial,sans-serif', 'color:#fff'
+            ].join(';');
+            document.body.appendChild(resumeProgressEl);
+        }
+
+        const safePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+        resumeProgressEl.innerHTML = `
+            <div style="font-size:12px;font-weight:700;margin-bottom:9px;">🧠 AI sedang menganalisis meeting...</div>
+            <div style="height:9px;background:rgba(255,255,255,.12);border-radius:99px;overflow:hidden;margin-bottom:8px;">
+                <div style="height:100%;width:${safePercent}%;background:linear-gradient(90deg,#6366f1,#8b5cf6,#06b6d4);border-radius:99px;transition:width .35s ease;"></div>
+            </div>
+            <div style="font-size:11px;color:#cbd5e1;line-height:1.4;">${escapeHtml(message || '')}</div>
+            <div style="font-size:10px;color:#94a3b8;margin-top:5px;text-align:right;">${safePercent}%</div>
+        `;
+    }
+
+    function hideResumeProgress(delay = 900) {
+        if (!resumeProgressEl) return;
+        const el = resumeProgressEl;
+        setTimeout(() => {
+            if (el && el.parentNode) el.parentNode.removeChild(el);
+            if (resumeProgressEl === el) resumeProgressEl = null;
+        }, delay);
+    }
 
     function buildMeetingMinutesHtml(resume, now) {
         const year = now.getFullYear();
@@ -1788,9 +1845,13 @@ ${compact}`;
             // Tidak memulai recording baru dan tidak mengubah Firebase.
             let resume = null;
             try {
-                resume = await generateMeetingResume(true);
+                showResumeProgress(1, 'Menyiapkan transcript meeting...');
+                resume = await generateMeetingResume(true, (percent, message) => {
+                    showResumeProgress(percent, message);
+                });
             } catch (aiError) {
                 console.error('Generate local resume error:', aiError);
+                showResumeProgress(100, '⚠️ AI Resume gagal. Menyimpan transkrip asli...');
             }
 
             if (!resume) {
@@ -1806,6 +1867,7 @@ ${compact}`;
                 const writable = await fileHandle.createWritable();
                 await writable.write(data);
                 await writable.close();
+                hideResumeProgress(700);
                 alert('Minutes berhasil disimpan:\n' + fileName);
                 return;
             }
@@ -1820,12 +1882,14 @@ ${compact}`;
             link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
+            hideResumeProgress(700);
             setTimeout(() => {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
             }, 1000);
 
         } catch (error) {
+            hideResumeProgress(0);
             console.error('Save Minutes Error:', error);
             alert('Gagal menyimpan Minutes: ' + (error && error.message ? error.message : error));
         } finally {
