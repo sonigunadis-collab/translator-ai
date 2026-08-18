@@ -530,33 +530,45 @@
 <!-- Local AI Meeting Summarizer: browser-local, free, no API key -->
 <script type="module">
     // ============================================================
-    // LOCAL AI MEETING RESUME
+    // LOCAL AI MEETING RESUME — OPTIMIZED
     // Qwen2.5-0.5B-Instruct + Transformers.js
-    // Tidak membutuhkan API key. Inference dilakukan di browser.
+    //
+    // FOKUS PERBAIKAN:
+    // - Tetap AI lokal / gratis / tanpa API key.
+    // - Meeting pendek: HANYA 1 kali inferensi (sebelumnya 2 kali).
+    // - Meeting panjang: chunk -> ringkas -> 1 final merge.
+    // - Output bukan JSON panjang; format teks lebih ringan dan stabil.
+    // - Translator / Firebase / room / microphone / TTS tidak disentuh.
     // ============================================================
     import { pipeline } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1/+esm";
 
     let localMeetingSummarizer = null;
     let localMeetingSummarizerPromise = null;
 
-    async function getLocalMeetingSummarizer() {
+    async function getLocalMeetingSummarizer(onProgress = null) {
         if (localMeetingSummarizer) return localMeetingSummarizer;
         if (localMeetingSummarizerPromise) return localMeetingSummarizerPromise;
 
         localMeetingSummarizerPromise = (async () => {
+            if (typeof onProgress === 'function') onProgress(5, '🧠 Memuat AI lokal Qwen...');
+
             const modelId = "onnx-community/Qwen2.5-0.5B-Instruct";
+            const options = {
+                dtype: "q4",
+                ...(navigator.gpu ? { device: "webgpu" } : {})
+            };
+
             try {
-                localMeetingSummarizer = await pipeline("text-generation", modelId, {
-                    dtype: "q4",
-                    ...(navigator.gpu ? { device: "webgpu" } : {})
-                });
+                localMeetingSummarizer = await pipeline("text-generation", modelId, options);
             } catch (error1) {
                 console.warn("Local AI WebGPU gagal, mencoba WASM:", error1);
+                if (typeof onProgress === 'function') onProgress(6, '🧠 WebGPU tidak tersedia, memakai AI lokal WASM...');
                 localMeetingSummarizer = await pipeline("text-generation", modelId, {
                     dtype: "q4",
                     device: "wasm"
                 });
             }
+
             return localMeetingSummarizer;
         })();
 
@@ -578,24 +590,102 @@
         return "";
     }
 
-    function cleanJsonText(text) {
-        if (!text) return "";
-        let value = text.trim();
-        value = value.replace(/^```(?:json)?/i, "").replace(/```$/i, "").trim();
-        const first = value.indexOf("{");
-        const last = value.lastIndexOf("}");
-        if (first >= 0 && last > first) value = value.slice(first, last + 1);
+    function stripModelPreamble(text) {
+        let value = String(text || '').trim();
+        value = value.replace(/^```(?:text|json)?/i, '').replace(/```$/i, '').trim();
         return value;
     }
 
-    async function runLocalSummary(prompt, maxTokens = 500) {
-        const generator = await getLocalMeetingSummarizer();
+    function normalizeResumeText(text) {
+        return stripModelPreamble(text)
+            .replace(/\r/g, '')
+            .replace(/^\s*RESUME\s*MEETING\s*:?/im, '')
+            .trim();
+    }
+
+    function parseResumeText(raw) {
+        const text = stripModelPreamble(raw);
+        const result = {
+            id: '',
+            conclusion: '',
+            decisions: [],
+            actions: []
+        };
+
+        // Format yang diminta ke model:
+        // RESUME: ...
+        // KESIMPULAN: ...
+        // KEPUTUSAN:
+        // - ...
+        // TINDAK LANJUT:
+        // - ...
+        const sections = {};
+        const re = /(?:^|\n)\s*(RESUME|KESIMPULAN|KEPUTUSAN|TINDAK\s+LANJUT)\s*:\s*/gi;
+        const matches = [...text.matchAll(re)];
+
+        if (!matches.length) {
+            result.id = normalizeResumeText(text);
+            return result;
+        }
+
+        for (let i = 0; i < matches.length; i++) {
+            const key = matches[i][1].toUpperCase().replace(/\s+/g, ' ');
+            const start = matches[i].index + matches[i][0].length;
+            const end = i + 1 < matches.length ? matches[i + 1].index : text.length;
+            sections[key] = text.slice(start, end).trim();
+        }
+
+        result.id = sections['RESUME'] || '';
+        result.conclusion = sections['KESIMPULAN'] || '';
+
+        const parseList = value => String(value || '')
+            .split('\n')
+            .map(x => x.replace(/^\s*[-•*]\s*/, '').trim())
+            .filter(Boolean);
+
+        result.decisions = parseList(sections['KEPUTUSAN']);
+        result.actions = parseList(sections['TINDAK LANJUT']);
+
+        return result;
+    }
+
+    function cleanSentence(value) {
+        return String(value || '')
+            .replace(/^[-•*]\s*/, '')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function uniqueStrings(values) {
+        return [...new Set((values || [])
+            .map(cleanSentence)
+            .filter(Boolean))];
+    }
+
+    function chunkTranscript(text, maxChars = 9000) {
+        const lines = String(text || '').split('\n').filter(Boolean);
+        const chunks = [];
+        let current = '';
+
+        for (const line of lines) {
+            if ((current.length + line.length + 1) > maxChars && current) {
+                chunks.push(current);
+                current = '';
+            }
+            current += (current ? '\n' : '') + line;
+        }
+        if (current) chunks.push(current);
+        return chunks;
+    }
+
+    async function runLocalSummary(prompt, maxTokens = 240, onProgress = null) {
+        const generator = await getLocalMeetingSummarizer(onProgress);
         const messages = [
             {
-                role: "system",
-                content: "Anda adalah sekretaris meeting profesional. Gunakan HANYA informasi yang ada di transkrip. Jangan mengarang nama, keputusan, angka, jadwal, atau tindakan yang tidak disebutkan. Jawab ringkas dan faktual."
+                role: 'system',
+                content: 'Anda adalah sekretaris meeting profesional. Gunakan HANYA informasi dari transkrip. Jangan mengarang nama, angka, keputusan, jadwal, atau tindakan. Bahasa output wajib Bahasa Indonesia. Ringkas, faktual, dan langsung ke inti.'
             },
-            { role: "user", content: prompt }
+            { role: 'user', content: prompt }
         ];
 
         const result = await generator(messages, {
@@ -607,131 +697,152 @@
         return extractGeneratedText(result);
     }
 
-    async function summarizeChunk(chunk) {
-        const prompt = `Buat ringkasan sementara dari bagian transkrip meeting berikut.
+    function makeSinglePassPrompt(transcript) {
+        return `Buat RESUME MEETING dari transkrip berikut.
 
-Kembalikan HANYA JSON valid tanpa markdown:
-{
-  "summary": "Ringkasan singkat dalam Bahasa Indonesia",
-  "conclusion": "Kesimpulan dari bagian ini",
-  "decisions": ["Keputusan yang benar-benar disebutkan"],
-  "actions": ["Tindak lanjut yang benar-benar disebutkan"]
-}
+Kembalikan dengan format PERSIS seperti ini dan jangan gunakan markdown code block:
+RESUME: [ringkasan meeting 3-6 kalimat]
+KESIMPULAN: [kesimpulan utama]
+KEPUTUSAN:
+- [keputusan nyata, jika ada]
+TINDAK LANJUT:
+- [action nyata, jika ada]
 
-Jika tidak ada keputusan atau tindak lanjut, gunakan array kosong.
+Jika tidak ada keputusan atau tindak lanjut, tulis:
+KEPUTUSAN:
+- Tidak ada keputusan yang disebutkan.
+TINDAK LANJUT:
+- Tidak ada tindak lanjut yang disebutkan.
+
+Jangan mengarang informasi.
+
+TRANSKRIP MEETING:
+${transcript}`;
+    }
+
+    function makeChunkPrompt(chunk, index, total) {
+        return `Ringkas BAGIAN ${index} dari ${total} transkrip meeting berikut.
+
+Kembalikan format PERSIS:
+RESUME: [ringkasan bagian]
+KESIMPULAN: [kesimpulan bagian]
+KEPUTUSAN:
+- [keputusan yang benar-benar disebutkan]
+TINDAK LANJUT:
+- [tindak lanjut yang benar-benar disebutkan]
+
+Jangan mengarang. Jika tidak ada, tulis bagian tersebut dengan "Tidak ada yang disebutkan".
 
 TRANSKRIP:
 ${chunk}`;
-
-        const raw = await runLocalSummary(prompt, 450);
-        const json = cleanJsonText(raw);
-        try {
-            return JSON.parse(json);
-        } catch (e) {
-            console.warn("JSON chunk resume tidak valid:", raw);
-            return {
-                summary: "",
-                conclusion: "",
-                decisions: [],
-                actions: []
-            };
-        }
     }
 
-    function chunkTranscript(text, maxChars = 7000) {
-        const lines = String(text || "").split("\n").filter(Boolean);
-        const chunks = [];
-        let current = "";
+    function makeFinalMergePrompt(compact) {
+        return `Gabungkan ringkasan bagian meeting berikut menjadi satu RESUME MEETING profesional.
 
-        for (const line of lines) {
-            if ((current.length + line.length + 1) > maxChars && current) {
-                chunks.push(current);
-                current = "";
-            }
-            current += (current ? "\n" : "") + line;
-        }
-        if (current) chunks.push(current);
-        return chunks;
-    }
+Kembalikan format PERSIS:
+RESUME: [ringkasan keseluruhan 4-8 kalimat]
+KESIMPULAN: [kesimpulan utama meeting]
+KEPUTUSAN:
+- [keputusan unik dan benar-benar didukung isi]
+TINDAK LANJUT:
+- [action unik dan benar-benar didukung isi]
 
-    function uniqueStrings(values) {
-        return [...new Set((values || [])
-            .map(v => String(v || "").trim())
-            .filter(Boolean))];
+Jangan mengarang. Hapus duplikasi. Jika tidak ada, tulis "Tidak ada yang disebutkan".
+
+RINGKASAN BAGIAN:
+${compact}`;
     }
 
     window.generateMeetingResumeLocal = async function(transcript, onProgress = null) {
         if (!transcript || !transcript.trim()) return null;
 
-        // Meeting panjang 2–3 jam dapat melebihi context model.
-        // Karena itu transcript dipecah menjadi beberapa bagian dahulu.
-        const chunks = chunkTranscript(transcript, 7000);
-        const partials = [];
+        const cleanTranscript = String(transcript).trim();
+        const chunks = chunkTranscript(cleanTranscript, 9000);
 
-        if (typeof onProgress === 'function') onProgress(3, `🧠 Memuat AI lokal...`);
+        // ========================================================
+        // OPTIMASI UTAMA:
+        // Meeting pendek hanya 1 inferensi Qwen.
+        // Sebelumnya: chunk summary + final merge = 2 inferensi.
+        // ========================================================
+        if (chunks.length === 1) {
+            if (typeof onProgress === 'function') onProgress(8, 'Menganalisis bagian 1 dari 1...');
 
-        for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
-            const chunk = chunks[chunkIndex];
-            const totalChunks = chunks.length;
-            const startPercent = 8;
-            const endPercent = 78;
-            const percent = Math.max(startPercent, Math.min(endPercent,
-                Math.round(startPercent + ((chunkIndex + 1) / totalChunks) * (endPercent - startPercent))));
-            if (typeof onProgress === 'function') {
-                onProgress(percent, `Menganalisis bagian ${chunkIndex + 1} dari ${totalChunks}...`);
+            const raw = await runLocalSummary(
+                makeSinglePassPrompt(cleanTranscript),
+                260,
+                onProgress
+            );
+
+            if (typeof onProgress === 'function') onProgress(82, '🧠 Menyusun hasil resume lokal...');
+
+            const parsed = parseResumeText(raw);
+
+            if (!parsed.id && !parsed.conclusion) {
+                // Fallback aman jika model menjawab bebas.
+                parsed.id = normalizeResumeText(raw);
             }
-            const part = await summarizeChunk(chunk);
-            if (part.summary || part.conclusion || part.decisions?.length || part.actions?.length) {
-                partials.push(part);
+
+            if (typeof onProgress === 'function') onProgress(90, '🌐 Menyiapkan English & Japanese...');
+            return parsed;
+        }
+
+        // ========================================================
+        // MEETING PANJANG:
+        // Beberapa chunk + satu final merge.
+        // ========================================================
+        const partials = [];
+        const totalChunks = chunks.length;
+
+        for (let i = 0; i < totalChunks; i++) {
+            const percent = Math.round(8 + ((i + 1) / totalChunks) * 68);
+            if (typeof onProgress === 'function') {
+                onProgress(percent, `Menganalisis bagian ${i + 1} dari ${totalChunks}...`);
+            }
+
+            const raw = await runLocalSummary(
+                makeChunkPrompt(chunks[i], i + 1, totalChunks),
+                180,
+                onProgress
+            );
+
+            const parsed = parseResumeText(raw);
+            if (parsed.id || parsed.conclusion || parsed.decisions.length || parsed.actions.length) {
+                partials.push(parsed);
             }
         }
 
-        if (!partials.length) throw new Error("Local AI tidak menghasilkan ringkasan.");
+        if (!partials.length) {
+            throw new Error('Local AI tidak menghasilkan ringkasan.');
+        }
 
         const compact = partials.map((p, i) =>
-            `BAGIAN ${i + 1}\nRingkasan: ${p.summary || ""}\nKesimpulan: ${p.conclusion || ""}\nKeputusan: ${(p.decisions || []).join("; ")}\nTindak lanjut: ${(p.actions || []).join("; ")}`
-        ).join("\n\n");
+            `BAGIAN ${i + 1}\nRESUME: ${p.id || ''}\nKESIMPULAN: ${p.conclusion || ''}\nKEPUTUSAN: ${p.decisions.join('; ')}\nTINDAK LANJUT: ${p.actions.join('; ')}`
+        ).join('\n\n');
 
-        const finalPrompt = `Gabungkan ringkasan bagian meeting berikut menjadi satu resume meeting yang profesional.
+        if (typeof onProgress === 'function') onProgress(82, '🧠 Menyusun resume akhir meeting...');
 
-Kembalikan HANYA JSON valid tanpa markdown:
-{
-  "id": "Resume meeting Bahasa Indonesia",
-  "conclusion": "Kesimpulan utama meeting dalam Bahasa Indonesia",
-  "decisions": ["Keputusan penting yang benar-benar didukung isi meeting"],
-  "actions": ["Tindak lanjut penting yang benar-benar didukung isi meeting"]
-}
+        const finalRaw = await runLocalSummary(
+            makeFinalMergePrompt(compact),
+            300,
+            onProgress
+        );
 
-Jangan mengarang informasi. Jika tidak ada keputusan/tindak lanjut, array harus kosong.
+        const finalParsed = parseResumeText(finalRaw);
 
-RINGKASAN BAGIAN MEETING:
-${compact}`;
-
-        if (typeof onProgress === 'function') onProgress(84, '🧠 Menyusun resume akhir meeting...');
-        let finalRaw = await runLocalSummary(finalPrompt, 600);
-        let finalJson;
-        try {
-            finalJson = JSON.parse(cleanJsonText(finalRaw));
-        } catch (e) {
-            // Fallback: gunakan hasil map jika model kecil gagal membuat JSON final.
-            finalJson = {
-                id: partials.map(p => p.summary).filter(Boolean).join(" "),
-                conclusion: partials.map(p => p.conclusion).filter(Boolean).join(" "),
-                decisions: uniqueStrings(partials.flatMap(p => p.decisions || [])),
-                actions: uniqueStrings(partials.flatMap(p => p.actions || []))
-            };
+        // Fallback jika final merge gagal diparse.
+        if (!finalParsed.id && !finalParsed.conclusion) {
+            finalParsed.id = partials.map(p => p.id).filter(Boolean).join(' ');
+            finalParsed.conclusion = partials.map(p => p.conclusion).filter(Boolean).join(' ');
+            finalParsed.decisions = uniqueStrings(partials.flatMap(p => p.decisions));
+            finalParsed.actions = uniqueStrings(partials.flatMap(p => p.actions));
+        } else {
+            finalParsed.decisions = uniqueStrings(finalParsed.decisions);
+            finalParsed.actions = uniqueStrings(finalParsed.actions);
         }
 
         if (typeof onProgress === 'function') onProgress(90, '🌐 Menyiapkan English & Japanese...');
-
-        return {
-            id: finalJson.id || "",
-            en: "",
-            ja: "",
-            conclusion: finalJson.conclusion || "",
-            decisions: uniqueStrings(finalJson.decisions),
-            actions: uniqueStrings(finalJson.actions)
-        };
+        return finalParsed;
     };
 </script>
 
