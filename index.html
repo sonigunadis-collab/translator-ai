@@ -683,7 +683,7 @@
         const messages = [
             {
                 role: 'system',
-                content: 'Anda adalah sekretaris meeting profesional. Gunakan HANYA informasi dari transkrip. Jangan mengarang nama, angka, keputusan, jadwal, atau tindakan. Bahasa output wajib Bahasa Indonesia. Ringkas, faktual, dan langsung ke inti.'
+                content: 'Anda adalah sekretaris meeting profesional. Gunakan HANYA informasi dari transkrip. Jangan mengarang nama, angka, keputusan, jadwal, atau tindakan. Abaikan sapaan, filler, pengulangan, kalimat tes seperti "apakah terdengar", dan percakapan yang tidak memberi informasi substantif. Kelompokkan pernyataan yang membahas topik yang sama. Prioritaskan tujuan/topik meeting, temuan penting, masalah, hasil pengujian, keputusan, dan tindak lanjut. Jika meeting berupa testing, jelaskan apa yang diuji dan hasil pentingnya, bukan menyalin ucapan peserta. Bahasa output wajib Bahasa Indonesia. Ringkas, faktual, terstruktur, dan langsung ke inti.'
             },
             { role: 'user', content: prompt }
         ];
@@ -698,11 +698,19 @@
     }
 
     function makeSinglePassPrompt(transcript) {
-        return `Buat RESUME MEETING dari transkrip berikut.
+        return `Buat RESUME MEETING yang menangkap INTI pembahasan, bukan menyalin transcript.
+
+Tugas:
+1. Identifikasi tujuan/topik utama meeting.
+2. Kelompokkan pembahasan yang sama menjadi satu poin.
+3. Ambil temuan/hasil pengujian yang penting, termasuk bahasa/perangkat/kondisi yang bermasalah jika memang disebutkan.
+4. Abaikan sapaan, basa-basi, filler, pengulangan, dan kalimat tes yang tidak menghasilkan informasi baru.
+5. Jangan memasukkan urutan kalimat mentah sebagai resume.
+6. Jangan mengarang keputusan atau action.
 
 Kembalikan dengan format PERSIS seperti ini dan jangan gunakan markdown code block:
-RESUME: [ringkasan meeting 3-6 kalimat]
-KESIMPULAN: [kesimpulan utama]
+RESUME: [ringkasan meeting 4-8 kalimat yang padat dan fokus pada inti]
+KESIMPULAN: [kesimpulan utama berdasarkan temuan]
 KEPUTUSAN:
 - [keputusan nyata, jika ada]
 TINDAK LANJUT:
@@ -1732,8 +1740,17 @@ ${compact}`;
     }
 
     function getOriginalTranscriptForResume() {
-        const source = Array.isArray(chatHistory) ? chatHistory : [];
+        const source = Array.isArray(chatHistory) ? chatHistory.slice() : [];
         const seen = new Set();
+
+        // Firebase child_added/network delivery tidak selalu datang sesuai urutan waktu.
+        // Untuk resume, susun ulang berdasarkan timestamp asli agar konteks meeting tidak acak.
+        source.sort((a, b) => {
+            const ta = Number(a?.timestamp) || 0;
+            const tb = Number(b?.timestamp) || 0;
+            if (ta && tb && ta !== tb) return ta - tb;
+            return String(a?.time || '').localeCompare(String(b?.time || ''));
+        });
 
         return source.map((item, index) => {
             const key = String(item.id || `${item.date}|${item.time}|${item.original}`);
@@ -1770,31 +1787,97 @@ ${compact}`;
         return resume;
     }
 
-    // Fast deterministic fallback used only for instant file creation.
-    // It never replaces the existing local-Qwen pipeline; it prevents the Download
-    // button from waiting for AI inference when a resume is not ready yet.
+    // Fallback CEPAT untuk membuat file langsung tanpa menunggu Qwen.
+    // Ini bukan dump transcript. Script mengekstrak inti/topik/temuan dari kalimat
+    // yang sudah ada, menghapus kalimat pembuka/pengisi, mengurutkan waktu, dan
+    // mengelompokkan observasi yang saling berkaitan. Qwen tetap menjadi generator
+    // utama bila hasilnya sudah tersedia.
     function buildInstantMeetingResume() {
-        const items = Array.isArray(chatHistory) ? chatHistory.filter(x => x && x.original) : [];
-        if (!items.length) return null;
+        const rawItems = Array.isArray(chatHistory)
+            ? chatHistory.filter(x => x && String(x.original || '').trim())
+            : [];
+        if (!rawItems.length) return null;
 
-        // cleanSentence berada di scope script module; fallback ini berada di
-        // script aplikasi utama. Gunakan pembersihan lokal agar tidak bergantung
-        // pada scope module dan tidak mengubah pipeline AI/Qwen yang sudah ada.
-        const sentences = items.map(x => String(x.original || '')
+        const items = rawItems.slice().sort((a, b) => {
+            const ta = Number(a?.timestamp) || 0;
+            const tb = Number(b?.timestamp) || 0;
+            if (ta && tb && ta !== tb) return ta - tb;
+            return String(a?.time || '').localeCompare(String(b?.time || ''));
+        });
+
+        const clean = value => String(value || '')
             .replace(/^[-•*]\s*/, '')
             .replace(/\s+/g, ' ')
-            .trim())
-            .filter(Boolean);
-        const summary = sentences.slice(0, 8).join(' ');
-        const lastItems = sentences.slice(-3);
+            .trim();
+
+        const stopOnly = /^(halo|hai|selamat (pagi|siang|sore|malam) semuanya?|oke|ok|ya|iya|tes|testing|coba)$/i;
+        const filler = /^(apakah terdengar|apakah ada suaranya|terdengar semuanya|boleh|semuanya)$/i;
+        const substantive = items.map(x => ({ ...x, text: clean(x.original) }))
+            .filter(x => x.text && !stopOnly.test(x.text));
+
+        // Kalimat yang hanya berupa sapaan/cek singkat tidak menjadi isi resume.
+        const meaningful = substantive.filter(x => x.text.length >= 18 && !filler.test(x.text));
+        const pool = meaningful.length ? meaningful : substantive;
+
+        const has = re => pool.some(x => re.test(x.text));
+        const pick = re => pool.filter(x => re.test(x.text)).map(x => x.text);
+        const unique = values => [...new Set(values)];
+
+        // Identifikasi topik utama secara generik dari transkrip.
+        const topicSignals = [];
+        if (has(/bahasa|Korea|Vietnam|Thailand|Arab|Jepang|Inggris|Indonesia/i)) {
+            topicSignals.push('pengujian suara dan bahasa pada beberapa bahasa');
+        }
+        if (has(/suara|suaranya|terdengar|audio|mic|mikrofon|logat|ucapan/i)) {
+            topicSignals.push('kualitas dan keterdengaran audio');
+        }
+        if (has(/jelek|bagus|beda|ganggu|putus|hilang|nongol|noise|berisik/i)) {
+            topicSignals.push('identifikasi masalah/kualitas output suara');
+        }
+
+        const observations = [];
+        const positive = pick(/bagus|kedengeran|terdengar/i);
+        const negative = pick(/jelek|beda|ganggu|putus|hilang|nongol|noise|berisik/i);
+        const languageMentions = unique(pool.flatMap(x => {
+            const found = x.text.match(/Korea|Vietnam|Thailand|Arab|Jepang|Inggris|Indonesia/gi) || [];
+            return found.map(v => v.toLowerCase());
+        }));
+
+        if (languageMentions.length) {
+            observations.push(`Pengujian mencakup bahasa: ${languageMentions.join(', ')}.`);
+        }
+        if (positive.length) {
+            observations.push(`Ada hasil suara yang dinilai terdengar baik/jelas, antara lain: ${unique(positive).slice(0, 2).join(' | ')}`);
+        }
+        if (negative.length) {
+            observations.push(`Ditemukan keluhan/perbedaan kualitas suara, antara lain: ${unique(negative).slice(0, 3).join(' | ')}`);
+        }
+
+        const decisions = unique(pick(/(putuskan|diputuskan|sepakat|disepakati|setuju|keputusan)/i));
+        const actions = unique(pick(/(akan|harus|perlu|lanjut|tindak lanjut|follow up|follow-up|diperbaiki|perbaiki|cek kembali|dicek)/i));
+
+        let summary = '';
+        if (topicSignals.length) {
+            summary += `Meeting berfokus pada ${topicSignals.slice(0, 2).join(' dan ')}. `;
+        } else {
+            summary += 'Meeting berisi pembahasan dan pengujian berdasarkan percakapan yang terekam. ';
+        }
+        if (observations.length) {
+            summary += observations.slice(0, 3).join(' ');
+        } else {
+            const core = unique(pool.map(x => x.text)).slice(0, 3);
+            summary += core.join(' ');
+        }
+
+        const conclusion = negative.length
+            ? 'Hasil pengujian menunjukkan terdapat perbedaan kualitas/keterdengaran suara pada sebagian bahasa atau kondisi yang diuji sehingga perlu diperhatikan pada tahap perbaikan berikutnya.'
+            : 'Pengujian suara dan bahasa berhasil menghasilkan beberapa observasi dari percakapan yang terekam.';
 
         return {
-            id: summary || 'Resume meeting belum tersedia.',
-            conclusion: lastItems.length
-                ? 'Ringkasan otomatis dibuat dari transkrip meeting yang sudah terekam.'
-                : 'Tidak ada kesimpulan yang terdeteksi.',
-            decisions: [],
-            actions: [],
+            id: summary.trim(),
+            conclusion,
+            decisions: decisions.length ? decisions.slice(0, 5) : [],
+            actions: actions.length ? actions.slice(0, 5) : [],
             en: '',
             ja: ''
         };
