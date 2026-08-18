@@ -887,10 +887,47 @@ ${compact}`;
     let roomMembersRef = null;
     let roomListenersAttached = false;
     let leavingRoom = false;
-    // Browser SpeechRecognition sering memutus sesi setelah periode tertentu.
-    // Timer ini melakukan restart terkontrol tanpa mematikan fitur recording user.
+    // SpeechRecognition dapat berhenti sendiri. onend akan reconnect otomatis.
+    // Tidak ada restart paksa berkala agar mic tidak menghasilkan bunyi klik/beep.
     let recognitionRestartTimer = null;
     let recognitionGeneration = 0;
+
+    // Keep the device screen awake while translation is running.
+    // This prevents Android/iOS/desktop sleep from suspending the recognition session.
+    let wakeLockSentinel = null;
+
+    async function requestMeetingWakeLock() {
+        if (!isRunning || !('wakeLock' in navigator)) return;
+        try {
+            if (wakeLockSentinel && !wakeLockSentinel.released) return;
+            wakeLockSentinel = await navigator.wakeLock.request('screen');
+            wakeLockSentinel.addEventListener('release', () => {
+                wakeLockSentinel = null;
+                // If the browser releases the lock (for example after visibility changes),
+                // visibilitychange below will request it again.
+            });
+        } catch (error) {
+            console.warn('Screen Wake Lock tidak tersedia/ditolak:', error);
+        }
+    }
+
+    async function releaseMeetingWakeLock() {
+        if (!wakeLockSentinel) return;
+        try { await wakeLockSentinel.release(); } catch (e) {}
+        wakeLockSentinel = null;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && isRunning) {
+            requestMeetingWakeLock();
+            // Reconnect recognition if the browser ended the session while hidden.
+            if (!recognition && typeof window.__voiceBridgeCreateRecognition === 'function') {
+                setTimeout(() => {
+                    if (isRunning && !leavingRoom) window.__voiceBridgeCreateRecognition();
+                }, 200);
+            }
+        }
+    });
 
     // Anti-duplicate / live-message control.
     // Pesan lama dari Firebase tetap ditampilkan, tetapi TIDAK dibacakan ulang.
@@ -971,7 +1008,9 @@ ${compact}`;
 
             const render = () => {
                 const existing = document.getElementById('room-card-' + roomId);
-                const booked = !!(meta && meta.accessCode && memberCount > 0);
+                // accessCode adalah sumber status lock. Jangan bergantung pada memberCount,
+                // karena refresh/browser sleep dapat membuat member sementara = 0.
+                const booked = !!(meta && meta.accessCode);
                 const html = `
                     <div class="room-title">
                         <span>🚪 Room ${roomNumber(roomId)}</span>
@@ -1003,16 +1042,11 @@ ${compact}`;
                 memberCount = snap.exists() ? snap.numChildren() : 0;
                 render();
 
-                // Jika semua peserta benar-benar sudah keluar, hapus meta/kode lama.
-                // Ini juga membersihkan room setelah browser/laptop terputus mendadak.
-                if (memberCount === 0) {
-                    metaRef.once('value').then(metaSnap => {
-                        const value = metaSnap.val();
-                        if (value && value.ownerMemberId) {
-                            metaRef.remove().catch(() => {});
-                        }
-                    });
-                }
+                // JANGAN menghapus meta/accessCode saat memberCount = 0.
+                // Refresh, sleep, crash, atau putus koneksi dapat membuat members kosong
+                // sementara. Room harus tetap LOCKED sampai owner/peserta keluar
+                // secara eksplisit melalui tombol "Tinggalkan Room".
+
             });
         });
     }
@@ -1030,15 +1064,12 @@ ${compact}`;
             const membersSnap = await membersRef.once('value');
             const memberCount = membersSnap.exists() ? membersSnap.numChildren() : 0;
 
-            // Jika kode tersisa tetapi sudah tidak ada peserta, bersihkan room lama terlebih dahulu.
-            if (memberCount === 0 && meta.ownerMemberId) {
-                await metaRef.remove().catch(() => {});
-                meta = {};
-            }
-
+            // PENTING: accessCode tetap mengunci room walaupun members sementara = 0
+            // akibat refresh/sleep/crash. Room hanya kembali AVAILABLE setelah
+            // leaveRoom() menghapus meta secara eksplisit.
             let code;
 
-            if (meta.accessCode && memberCount > 0) {
+            if (meta.accessCode) {
                 code = prompt(`Room ${roomNumber(roomId)} sedang BOOKED.\nMasukkan kode 4 digit untuk bergabung:`);
                 if (code === null) return;
                 code = code.trim();
@@ -1073,8 +1104,8 @@ ${compact}`;
                     const latest = (await metaRef.once('value')).val() || {};
                     const latestMembers = await membersRef.once('value');
                     const latestCount = latestMembers.exists() ? latestMembers.numChildren() : 0;
-                    if (latest.accessCode && latestCount > 0) {
-                        alert("Room baru saja dipakai user lain. Silakan klik room tersebut dan masukkan kode.");
+                    if (latest.accessCode) {
+                        alert("Room baru saja dikunci user lain. Silakan klik room tersebut dan masukkan kode.");
                         return;
                     }
                     alert("Room belum dapat dibuka. Silakan coba lagi.");
@@ -1084,7 +1115,7 @@ ${compact}`;
                 code = String((result.snapshot.val() || {}).accessCode || code);
             }
 
-            await openRoomSession(roomId, code, memberCount === 0);
+            await openRoomSession(roomId, code, !metaSnap.exists());
         } catch (error) {
             console.error(error);
             alert("Gagal membuka room: " + (error && error.message ? error.message : error));
@@ -1395,15 +1426,13 @@ ${compact}`;
         recognitionGeneration++;
         const generation = recognitionGeneration;
 
-        // Chrome desktop/mobile dapat mengakhiri satu sesi SpeechRecognition secara
-        // otomatis. Kita restart sebelum batas tersebut tercapai, sehingga status
-        // Start Translation tetap aktif dan perekaman berlanjut tanpa batas waktu.
+        // JANGAN melakukan restart paksa setiap 50 detik.
+        // Restart berkala adalah sumber umum bunyi klik/beep dari engine speech di HP.
+        // SpeechRecognition tetap continuous; jika browser mengakhiri sesi, onend
+        // di bawah akan membuat sesi baru secara otomatis.
         const scheduleRecognitionRefresh = () => {
             clearTimeout(recognitionRestartTimer);
-            recognitionRestartTimer = setTimeout(() => {
-                if (!isRunning || leavingRoom || generation !== recognitionGeneration) return;
-                restartRecognitionSession(generation);
-            }, 50000); // refresh berkala, jauh di bawah batas sesi browser.
+            recognitionRestartTimer = null;
         };
 
         const createRecognition = () => {
@@ -1426,6 +1455,7 @@ ${compact}`;
                     sourceLangSelect.disabled = true;
                     if (transcriptBox.querySelector('.transcript-placeholder')) transcriptBox.innerHTML = '';
                     scheduleRecognitionRefresh();
+                    requestMeetingWakeLock();
                 };
 
                 recognition.onresult = event => {
@@ -1543,6 +1573,7 @@ ${compact}`;
         }
         recognition = null;
         window.__voiceBridgeCreateRecognition = null;
+        releaseMeetingWakeLock();
         btnText.textContent = "Start Translation";
         actionBtn.className = "btn btn-start";
         statusBadge.style.display = 'none';
@@ -1737,6 +1768,29 @@ ${compact}`;
         resume.en = await translateSafe(idSections, 'en');
         resume.ja = await translateSafe(idSections, 'ja');
         return resume;
+    }
+
+    // Fast deterministic fallback used only for instant file creation.
+    // It never replaces the existing local-Qwen pipeline; it prevents the Download
+    // button from waiting for AI inference when a resume is not ready yet.
+    function buildInstantMeetingResume() {
+        const items = Array.isArray(chatHistory) ? chatHistory.filter(x => x && x.original) : [];
+        if (!items.length) return null;
+
+        const sentences = items.map(x => cleanSentence(x.original)).filter(Boolean);
+        const summary = sentences.slice(0, 8).join(' ');
+        const lastItems = sentences.slice(-3);
+
+        return {
+            id: summary || 'Resume meeting belum tersedia.',
+            conclusion: lastItems.length
+                ? 'Ringkasan otomatis dibuat dari transkrip meeting yang sudah terekam.'
+                : 'Tidak ada kesimpulan yang terdeteksi.',
+            decisions: [],
+            actions: [],
+            en: '',
+            ja: ''
+        };
     }
 
     async function generateMeetingResume(force = false, onProgress = null) {
@@ -1952,23 +2006,17 @@ ${compact}`;
                 saveBtn.style.pointerEvents = 'none';
             }
 
-            // Generate resume sepenuhnya dari transcript yang sudah ada.
-            // Tidak memulai recording baru dan tidak mengubah Firebase.
-            let resume = null;
-            try {
-                showResumeProgress(1, 'Menyiapkan transcript meeting...');
-                resume = await generateMeetingResume(true, (percent, message) => {
-                    showResumeProgress(percent, message);
-                });
-            } catch (aiError) {
-                console.error('Generate local resume error:', aiError);
-                showResumeProgress(100, '⚠️ AI Resume gagal. Menyimpan transkrip asli...');
-            }
+            // DOWNLOAD HARUS CEPAT:
+            // - Jika AI lokal sudah selesai, pakai hasil AI tersebut.
+            // - Jika AI masih bekerja/belum siap, langsung buat resume ringan dari script
+            //   berdasarkan transkrip. Proses Qwen tetap boleh berjalan di background.
+            // - Tidak menunggu inferensi AI sebelum file dibuat.
+            let resume = latestMeetingResume || buildInstantMeetingResume();
 
-            if (!resume) {
-                // Jangan menghilangkan fungsi Save hanya karena AI gagal.
-                // Transkrip tetap bisa disimpan, tetapi user diberi tahu.
-                alert('AI lokal belum berhasil membuat resume. File tetap akan disimpan dengan transkrip asli. Coba lagi setelah model AI selesai dimuat.');
+            if (!latestMeetingResume && typeof window.generateMeetingResumeLocal === 'function' && !meetingResumePromise) {
+                generateMeetingResume(true).catch(error => {
+                    console.warn('Background local AI resume:', error);
+                });
             }
 
             const htmlContent = buildMeetingMinutesHtml(resume, now);
@@ -1978,7 +2026,7 @@ ${compact}`;
                 const writable = await fileHandle.createWritable();
                 await writable.write(data);
                 await writable.close();
-                hideResumeProgress(700);
+                hideResumeProgress(0);
                 alert('Minutes berhasil disimpan:\n' + fileName);
                 return;
             }
@@ -1993,7 +2041,7 @@ ${compact}`;
             link.style.display = 'none';
             document.body.appendChild(link);
             link.click();
-            hideResumeProgress(700);
+            hideResumeProgress(0);
             setTimeout(() => {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
