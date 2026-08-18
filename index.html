@@ -1777,7 +1777,14 @@ ${compact}`;
         const items = Array.isArray(chatHistory) ? chatHistory.filter(x => x && x.original) : [];
         if (!items.length) return null;
 
-        const sentences = items.map(x => cleanSentence(x.original)).filter(Boolean);
+        // cleanSentence berada di scope script module; fallback ini berada di
+        // script aplikasi utama. Gunakan pembersihan lokal agar tidak bergantung
+        // pada scope module dan tidak mengubah pipeline AI/Qwen yang sudah ada.
+        const sentences = items.map(x => String(x.original || '')
+            .replace(/^[-•*]\s*/, '')
+            .replace(/\s+/g, ' ')
+            .trim())
+            .filter(Boolean);
         const summary = sentences.slice(0, 8).join(' ');
         const lastItems = sentences.slice(-3);
 
