@@ -404,6 +404,24 @@
             color:#fb7185;
             border:1px solid rgba(244,63,94,.3);
         }
+        .room-owner-tools {
+            margin-top:14px;
+            padding:12px;
+            border-radius:var(--radius-md);
+            border:1px solid rgba(245,158,11,.22);
+            background:rgba(245,158,11,.05);
+            text-align:center;
+        }
+        .btn-owner-room {
+            width:100%;
+            background:linear-gradient(135deg, rgba(245,158,11,.16), rgba(99,102,241,.12));
+            color:#fbbf24;
+            border:1px solid rgba(245,158,11,.38);
+            font-weight:800;
+        }
+        .btn-owner-room:hover { border-color:#fbbf24; color:#fde68a; }
+        .room-owner-hint { margin-top:7px; font-size:9px; color:var(--text-muted); line-height:1.45; }
+
         .room-loading { text-align:center; padding:16px; color:var(--text-muted); font-size:11px; }
         @media (max-width: 520px) {
             body { align-items:flex-start; padding:10px; }
@@ -431,6 +449,12 @@
         </div>
         <div id="roomGrid" class="room-grid">
             <div class="room-loading">Menghubungkan ke server room...</div>
+        </div>
+        <div class="room-owner-tools">
+            <button id="ownerUnlockRoomBtn" class="btn btn-owner-room" type="button" onclick="ownerUnlockRoom()">
+                🔐 Owner — Unlock Room
+            </button>
+            <div class="room-owner-hint">Meeting sudah selesai tetapi room masih BOOKED? Owner dapat membuka lock room dengan password.</div>
         </div>
         <div id="roomCodeBox" class="room-code-box">
             <div>🔑 Kode room Anda</div>
@@ -683,7 +707,7 @@
         const messages = [
             {
                 role: 'system',
-                content: 'Anda adalah sekretaris meeting profesional. Gunakan HANYA informasi dari transkrip. Jangan mengarang nama, angka, keputusan, jadwal, atau tindakan. Abaikan sapaan, filler, pengulangan, kalimat tes seperti "apakah terdengar", dan percakapan yang tidak memberi informasi substantif. Kelompokkan pernyataan yang membahas topik yang sama. Prioritaskan tujuan/topik meeting, temuan penting, masalah, hasil pengujian, keputusan, dan tindak lanjut. Jika meeting berupa testing, jelaskan apa yang diuji dan hasil pentingnya, bukan menyalin ucapan peserta. Bahasa output wajib Bahasa Indonesia. Ringkas, faktual, terstruktur, dan langsung ke inti.'
+                content: 'Anda adalah sekretaris meeting profesional dan analis notulen. Gunakan HANYA informasi yang benar-benar ada di transkrip. JANGAN menyalin kalimat peserta. JANGAN membuat resume seperti kumpulan kutipan transcript. JANGAN mengarang nama, angka, keputusan, jadwal, penyebab, atau tindakan. Abaikan salam, basa-basi, filler, pengulangan, percobaan suara, dan pertanyaan seperti "apakah terdengar?" kecuali pertanyaan tersebut menghasilkan temuan penting. Kelompokkan semua ucapan yang membahas hal yang sama. Identifikasi: TUJUAN/TOPIK, TEMUAN, MASALAH/ISSUE, HASIL PENGUJIAN, KEPUTUSAN, dan TINDAK LANJUT. Untuk meeting testing, tuliskan apa yang diuji, hasil yang berhasil, hasil yang bermasalah, dan implikasinya. Jika hanya ada pengujian sederhana, tetap buat resume konseptual 4-8 kalimat, bukan daftar ucapan. Setiap kalimat resume harus merupakan abstraksi/parafrasa dari beberapa fakta transcript bila memungkinkan. Bahasa output wajib Bahasa Indonesia. Ringkas, faktual, profesional, dan langsung ke inti.'
             },
             { role: 'user', content: prompt }
         ];
@@ -698,65 +722,75 @@
     }
 
     function makeSinglePassPrompt(transcript) {
-        return `Buat RESUME MEETING yang menangkap INTI pembahasan, bukan menyalin transcript.
+        return `Anda sedang membuat NOTULEN/RESUME MEETING, bukan transkrip ulang.
 
-Tugas:
-1. Identifikasi tujuan/topik utama meeting.
-2. Kelompokkan pembahasan yang sama menjadi satu poin.
-3. Ambil temuan/hasil pengujian yang penting, termasuk bahasa/perangkat/kondisi yang bermasalah jika memang disebutkan.
-4. Abaikan sapaan, basa-basi, filler, pengulangan, dan kalimat tes yang tidak menghasilkan informasi baru.
-5. Jangan memasukkan urutan kalimat mentah sebagai resume.
-6. Jangan mengarang keputusan atau action.
+Analisis transcript berikut secara konseptual. Jangan sekadar menggabungkan kalimat asli.
 
-Kembalikan dengan format PERSIS seperti ini dan jangan gunakan markdown code block:
-RESUME: [ringkasan meeting 4-8 kalimat yang padat dan fokus pada inti]
-KESIMPULAN: [kesimpulan utama berdasarkan temuan]
+WAJIB: 
+- Temukan topik/tujuan utama meeting.
+- Kelompokkan percakapan yang membahas hal yang sama.
+- Bedakan hasil yang BERHASIL, hasil yang BERMASALAH, dan hal yang masih perlu diperbaiki.
+- Untuk testing, sebutkan objek yang diuji dan hasil pentingnya.
+- Abaikan salam, filler, pengulangan, dan kalimat cek mic/suara yang tidak memberi temuan baru.
+- Jangan memasukkan kutipan panjang dari peserta. Parafrase menjadi bahasa notulen.
+- Keputusan dan tindak lanjut hanya boleh ditulis jika benar-benar didukung transcript.
+- Jangan menyimpulkan penyebab teknis jika penyebabnya tidak disebutkan.
+
+FORMAT OUTPUT HARUS PERSIS:
+RESUME: [4-8 kalimat profesional yang merangkum inti meeting, bukan transcript]
+KESIMPULAN: [1-3 kalimat yang menjelaskan hasil utama meeting]
 KEPUTUSAN:
-- [keputusan nyata, jika ada]
+- [keputusan nyata]
 TINDAK LANJUT:
-- [action nyata, jika ada]
+- [action nyata]
 
-Jika tidak ada keputusan atau tindak lanjut, tulis:
+Jika tidak ada keputusan atau tindak lanjut:
 KEPUTUSAN:
 - Tidak ada keputusan yang disebutkan.
 TINDAK LANJUT:
 - Tidak ada tindak lanjut yang disebutkan.
 
-Jangan mengarang informasi.
+CHECK SEBELUM MENJAWAB:
+Apakah RESUME masih terdengar seperti orang sedang berbicara? Jika ya, ubah menjadi bahasa notulen.
+Apakah RESUME hanya menyalin transcript? Jika ya, abstraksikan kembali.
 
 TRANSKRIP MEETING:
 ${transcript}`;
     }
 
     function makeChunkPrompt(chunk, index, total) {
-        return `Ringkas BAGIAN ${index} dari ${total} transkrip meeting berikut.
+        return `Analisis BAGIAN ${index} dari ${total} transcript meeting. Buat ringkasan notulen, bukan salinan ucapan.
 
-Kembalikan format PERSIS:
-RESUME: [ringkasan bagian]
+Ambil hanya: topik, temuan penting, masalah/issue, hasil pengujian, keputusan nyata, dan tindak lanjut nyata. Abaikan salam, filler, pengulangan, dan tes mic yang tidak menghasilkan informasi. Kelompokkan ucapan yang sama dan parafrasekan. Jangan mengarang.
+
+FORMAT PERSIS:
+RESUME: [2-5 kalimat inti]
 KESIMPULAN: [kesimpulan bagian]
 KEPUTUSAN:
-- [keputusan yang benar-benar disebutkan]
+- [keputusan nyata atau Tidak ada yang disebutkan]
 TINDAK LANJUT:
-- [tindak lanjut yang benar-benar disebutkan]
+- [action nyata atau Tidak ada yang disebutkan]
 
-Jangan mengarang. Jika tidak ada, tulis bagian tersebut dengan "Tidak ada yang disebutkan".
-
-TRANSKRIP:
+TRANSKRIP BAGIAN ${index}:
 ${chunk}`;
     }
 
     function makeFinalMergePrompt(compact) {
-        return `Gabungkan ringkasan bagian meeting berikut menjadi satu RESUME MEETING profesional.
+        return `Gabungkan hasil analisis bagian meeting berikut menjadi satu NOTULEN MEETING profesional.
 
-Kembalikan format PERSIS:
-RESUME: [ringkasan keseluruhan 4-8 kalimat]
-KESIMPULAN: [kesimpulan utama meeting]
+Jangan mengulang kalimat peserta dan jangan menyusun resume sebagai daftar transcript. Hapus duplikasi. Kelompokkan topik yang sama. Prioritaskan tujuan meeting, temuan, masalah, hasil pengujian, keputusan, dan tindak lanjut. Jika suatu hal hanya muncul sebagai ucapan tanpa informasi substantif, jangan masukkan. Jangan mengarang.
+
+FORMAT PERSIS:
+RESUME: [4-8 kalimat yang benar-benar merangkum inti meeting]
+KESIMPULAN: [1-3 kalimat hasil utama]
 KEPUTUSAN:
 - [keputusan unik dan benar-benar didukung isi]
 TINDAK LANJUT:
 - [action unik dan benar-benar didukung isi]
 
-Jangan mengarang. Hapus duplikasi. Jika tidak ada, tulis "Tidak ada yang disebutkan".
+Jika tidak ada keputusan/tindak lanjut, tulis:
+- Tidak ada keputusan yang disebutkan.
+- Tidak ada tindak lanjut yang disebutkan.
 
 RINGKASAN BAGIAN:
 ${compact}`;
@@ -876,7 +910,7 @@ ${compact}`;
 
     const ROOM_IDS = ["room1", "room2", "room3", "room4", "room5", "room6"];
     const ROOM_ROOT = "meeting_rooms";
-    const OWNER_PASSWORD = "Toyota2026";
+    const OWNER_PASSWORD = "Veloz2026";
 
     let recognition = null;
     let isRunning = false;
@@ -1310,6 +1344,7 @@ ${compact}`;
 
         leavingRoom = true;
         stopListening();
+        stopBackgroundResumeMonitor();
 
         const oldRoomId = currentRoomId;
         const oldMetaRef = roomMetaRef;
@@ -1344,6 +1379,8 @@ ${compact}`;
         chatHistory = [];
         latestMeetingResume = null;
         meetingResumePromise = null;
+        lastBackgroundResumeAt = 0;
+        lastBackgroundResumeCount = 0;
         translationCache.clear();
         processedMessageIds.clear();
         recentSpeechKeys.clear();
@@ -1365,6 +1402,63 @@ ${compact}`;
             roomMembersRef.child(currentMemberId).remove();
         }
     });
+
+    // Owner dapat membuka lock room yang tertinggal setelah meeting selesai.
+    // Riwayat messages TIDAK dihapus; hanya meta lock room yang dibuka.
+    async function ownerUnlockRoom() {
+        const inputPass = prompt('Masukkan Password Owner untuk Unlock Room:');
+        if (inputPass === null) return;
+        if (inputPass !== OWNER_PASSWORD) {
+            alert('Password Owner salah! Akses Unlock Room ditolak.');
+            return;
+        }
+
+        try {
+            const bookedRooms = [];
+            for (const roomId of ROOM_IDS) {
+                const snap = await db.ref(`${ROOM_ROOT}/${roomId}/meta`).once('value');
+                const meta = snap.val();
+                if (meta && meta.accessCode) {
+                    const membersSnap = await db.ref(`${ROOM_ROOT}/${roomId}/members`).once('value');
+                    const count = membersSnap.exists() ? membersSnap.numChildren() : 0;
+                    bookedRooms.push({ roomId, count });
+                }
+            }
+
+            if (!bookedRooms.length) {
+                alert('Tidak ada Room yang sedang BOOKED.');
+                return;
+            }
+
+            const list = bookedRooms.map(x => `Room ${roomNumber(x.roomId)} (${x.count} orang)`).join('\n');
+            const selected = prompt(`ROOM BOOKED yang tersedia:\n\n${list}\n\nMasukkan nomor Room yang ingin di-UNLOCK (1-6):`);
+            if (selected === null) return;
+            const roomId = `room${String(selected).trim()}`;
+            const target = bookedRooms.find(x => x.roomId === roomId);
+            if (!target) {
+                alert('Nomor Room tidak valid atau Room tersebut tidak sedang BOOKED.');
+                return;
+            }
+
+            const warning = target.count > 0
+                ? `Room ${roomNumber(roomId)} masih memiliki ${target.count} peserta aktif.\n\nPastikan meeting benar-benar sudah selesai. Unlock hanya menghapus LOCK room, tidak menghapus transcript.\n\nLanjutkan?`
+                : `Unlock Room ${roomNumber(roomId)}?\n\nRiwayat meeting tetap aman dan tidak dihapus.`;
+            if (!confirm(warning)) return;
+
+            const metaRef = db.ref(`${ROOM_ROOT}/${roomId}/meta`);
+            await metaRef.transaction(current => {
+                if (!current || !current.accessCode) return current;
+                return null;
+            });
+
+            alert(`Room ${roomNumber(roomId)} berhasil di-UNLOCK.\nRoom sekarang AVAILABLE.\nRiwayat meeting tetap tersimpan.`);
+        } catch (error) {
+            console.error('Owner unlock room:', error);
+            alert('Gagal Unlock Room: ' + (error && error.message ? error.message : error));
+        }
+    }
+
+    window.ownerUnlockRoom = ownerUnlockRoom;
 
     // Owner panel tetap dipertahankan, tetapi sekarang hanya berlaku untuk room yang sedang aktif.
     function verifyOwner() {
@@ -1430,6 +1524,7 @@ ${compact}`;
         if (isRunning) return;
 
         isRunning = true;
+        startBackgroundResumeMonitor();
         warmUpSpeechEngine();
         recognitionGeneration++;
         const generation = recognitionGeneration;
@@ -1572,6 +1667,7 @@ ${compact}`;
 
     function stopListening() {
         isRunning = false;
+        stopBackgroundResumeMonitor();
         recognitionGeneration++;
         clearTimeout(recognitionRestartTimer);
         recognitionRestartTimer = null;
@@ -1805,79 +1901,47 @@ ${compact}`;
             return String(a?.time || '').localeCompare(String(b?.time || ''));
         });
 
-        const clean = value => String(value || '')
-            .replace(/^[-•*]\s*/, '')
-            .replace(/\s+/g, ' ')
-            .trim();
+        const clean = value => String(value || '').replace(/^[-•*]\s*/, '').replace(/\s+/g, ' ').trim();
+        const unique = values => [...new Set(values.map(clean).filter(Boolean))];
+        const textItems = items.map(x => ({ ...x, text: clean(x.original) })).filter(x => x.text);
+        const filler = /^(halo|hai|selamat (pagi|siang|sore|malam)|oke|ok|ya|iya|tes|testing|coba|boleh|apakah terdengar|apakah ada suaranya|terdengar semuanya)$/i;
+        const pool = textItems.filter(x => x.text.length >= 18 && !filler.test(x.text));
+        const source = pool.length ? pool : textItems;
 
-        const stopOnly = /^(halo|hai|selamat (pagi|siang|sore|malam) semuanya?|oke|ok|ya|iya|tes|testing|coba)$/i;
-        const filler = /^(apakah terdengar|apakah ada suaranya|terdengar semuanya|boleh|semuanya)$/i;
-        const substantive = items.map(x => ({ ...x, text: clean(x.original) }))
-            .filter(x => x.text && !stopOnly.test(x.text));
-
-        // Kalimat yang hanya berupa sapaan/cek singkat tidak menjadi isi resume.
-        const meaningful = substantive.filter(x => x.text.length >= 18 && !filler.test(x.text));
-        const pool = meaningful.length ? meaningful : substantive;
-
-        const has = re => pool.some(x => re.test(x.text));
-        const pick = re => pool.filter(x => re.test(x.text)).map(x => x.text);
-        const unique = values => [...new Set(values)];
-
-        // Identifikasi topik utama secara generik dari transkrip.
-        const topicSignals = [];
-        if (has(/bahasa|Korea|Vietnam|Thailand|Arab|Jepang|Inggris|Indonesia/i)) {
-            topicSignals.push('pengujian suara dan bahasa pada beberapa bahasa');
-        }
-        if (has(/suara|suaranya|terdengar|audio|mic|mikrofon|logat|ucapan/i)) {
-            topicSignals.push('kualitas dan keterdengaran audio');
-        }
-        if (has(/jelek|bagus|beda|ganggu|putus|hilang|nongol|noise|berisik/i)) {
-            topicSignals.push('identifikasi masalah/kualitas output suara');
-        }
-
-        const observations = [];
-        const positive = pick(/bagus|kedengeran|terdengar/i);
-        const negative = pick(/jelek|beda|ganggu|putus|hilang|nongol|noise|berisik/i);
-        const languageMentions = unique(pool.flatMap(x => {
-            const found = x.text.match(/Korea|Vietnam|Thailand|Arab|Jepang|Inggris|Indonesia/gi) || [];
+        const has = re => source.some(x => re.test(x.text));
+        const pick = re => unique(source.filter(x => re.test(x.text)).map(x => x.text));
+        const languages = unique(source.flatMap(x => {
+            const found = x.text.match(/Korea|Vietnam|Thailand|Arab|Jepang|Inggris|Indonesia|Chinese|Mandarin/gi) || [];
             return found.map(v => v.toLowerCase());
         }));
 
-        if (languageMentions.length) {
-            observations.push(`Pengujian mencakup bahasa: ${languageMentions.join(', ')}.`);
-        }
-        if (positive.length) {
-            observations.push(`Ada hasil suara yang dinilai terdengar baik/jelas, antara lain: ${unique(positive).slice(0, 2).join(' | ')}`);
-        }
-        if (negative.length) {
-            observations.push(`Ditemukan keluhan/perbedaan kualitas suara, antara lain: ${unique(negative).slice(0, 3).join(' | ')}`);
-        }
+        const topics = [];
+        if (has(/bahasa|Korea|Vietnam|Thailand|Arab|Jepang|Inggris|Indonesia|Mandarin/i)) topics.push('pengujian bahasa dan suara');
+        if (has(/suara|suaranya|terdengar|audio|mic|mikrofon|logat|ucapan|voice/i)) topics.push('kualitas keterdengaran dan output suara');
+        if (has(/translator|terjemahan|translate|meeting/i)) topics.push('fungsi translator/terjemahan');
 
-        const decisions = unique(pick(/(putuskan|diputuskan|sepakat|disepakati|setuju|keputusan)/i));
-        const actions = unique(pick(/(akan|harus|perlu|lanjut|tindak lanjut|follow up|follow-up|diperbaiki|perbaiki|cek kembali|dicek)/i));
+        const positive = pick(/bagus|baik|jelas|kedengeran|terdengar|berhasil|lancar|oke|sudah bagus/i);
+        const negative = pick(/jelek|buruk|beda|ganggu|putus|hilang|nongol|noise|berisik|masalah|error|tidak terdengar|kurang/i);
+        const decisionLines = pick(/\b(putuskan|diputuskan|sepakat|disepakati|setuju|keputusan)\b/i);
+        const actionLines = pick(/\b(akan|harus|perlu|lanjut|tindak lanjut|follow up|follow-up|diperbaiki|perbaiki|cek kembali|dicek|uji kembali)\b/i);
 
-        let summary = '';
-        if (topicSignals.length) {
-            summary += `Meeting berfokus pada ${topicSignals.slice(0, 2).join(' dan ')}. `;
-        } else {
-            summary += 'Meeting berisi pembahasan dan pengujian berdasarkan percakapan yang terekam. ';
-        }
-        if (observations.length) {
-            summary += observations.slice(0, 3).join(' ');
-        } else {
-            const core = unique(pool.map(x => x.text)).slice(0, 3);
-            summary += core.join(' ');
-        }
+        const summaryParts = [];
+        if (topics.length) summaryParts.push(`Meeting berfokus pada ${topics.slice(0, 2).join(' dan ')}.`);
+        else summaryParts.push('Meeting berfokus pada pengujian dan evaluasi berdasarkan percakapan yang terekam.');
+        if (languages.length) summaryParts.push(`Pengujian mencakup ${languages.join(', ')}.`);
+        if (positive.length) summaryParts.push(`Beberapa hasil pengujian dinilai berhasil atau terdengar baik, termasuk pada ${positive.slice(0, 2).map(x => x.replace(/[.?!]+$/,'')).join('; ')}.`);
+        if (negative.length) summaryParts.push(`Ditemukan beberapa kendala atau perbedaan kualitas, terutama terkait ${negative.slice(0, 2).map(x => x.replace(/[.?!]+$/,'')).join('; ')}.`);
+        if (!positive.length && !negative.length && source.length) summaryParts.push('Belum terdapat indikator hasil positif atau masalah yang cukup spesifik dari transcript yang tersedia.');
 
         const conclusion = negative.length
-            ? 'Hasil pengujian menunjukkan terdapat perbedaan kualitas/keterdengaran suara pada sebagian bahasa atau kondisi yang diuji sehingga perlu diperhatikan pada tahap perbaikan berikutnya.'
-            : 'Pengujian suara dan bahasa berhasil menghasilkan beberapa observasi dari percakapan yang terekam.';
+            ? 'Hasil pengujian menunjukkan fungsi utama dapat digunakan, tetapi masih terdapat perbedaan atau kendala kualitas pada sebagian kondisi yang diuji.'
+            : 'Pengujian menghasilkan observasi terhadap fungsi dan kualitas suara/terjemahan berdasarkan kondisi yang dicoba.';
 
         return {
-            id: summary.trim(),
+            id: summaryParts.slice(0, 6).join(' '),
             conclusion,
-            decisions: decisions.length ? decisions.slice(0, 5) : [],
-            actions: actions.length ? actions.slice(0, 5) : [],
+            decisions: decisionLines.length ? decisionLines.slice(0, 5) : [],
+            actions: actionLines.length ? actionLines.slice(0, 5) : [],
             en: '',
             ja: ''
         };
@@ -1926,6 +1990,30 @@ ${compact}`;
     // 3) Logic meeting/Firebase/translator tidak disentuh.
     // ============================================================
     let saveMinutesBusy = false;
+    let backgroundResumeTimer = null;
+    let lastBackgroundResumeAt = 0;
+    let lastBackgroundResumeCount = 0;
+
+    function startBackgroundResumeMonitor() {
+        if (backgroundResumeTimer) return;
+        backgroundResumeTimer = setInterval(() => {
+            if (leavingRoom || !isRunning || !chatHistory.length || meetingResumePromise) return;
+            if (chatHistory.length < 6) return;
+            if (Date.now() - lastBackgroundResumeAt < 120000) return;
+            if ((chatHistory.length - lastBackgroundResumeCount) < 10) return;
+            lastBackgroundResumeAt = Date.now();
+            lastBackgroundResumeCount = chatHistory.length;
+            generateMeetingResume(true).catch(error => console.warn('Background meeting resume:', error));
+        }, 30000);
+    }
+
+    function stopBackgroundResumeMonitor() {
+        if (backgroundResumeTimer) {
+            clearInterval(backgroundResumeTimer);
+            backgroundResumeTimer = null;
+        }
+    }
+
 
     // Status sementara khusus proses Save/Resume. Tidak mengubah layout utama;
     // elemen ini hanya muncul ketika AI lokal sedang bekerja.
