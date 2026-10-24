@@ -188,6 +188,125 @@ select option{background:#0b1020;color:var(--txt)}
   .card-body{padding:13px}.room-grid{grid-template-columns:1fr}.lobby-tools{grid-template-columns:1fr}
   .meters{width:100%;margin-left:0}
 }
+/* ============================================================
+   LEARNING ENGLISH — gaya modul belajar (terpisah, prefix .lrn-)
+   ============================================================ */
+.cover-cta-row{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:12px;justify-content:center;align-items:center}
+.cover-cta.alt{background:linear-gradient(135deg,#0891b2,#06b6d4 60%,#10b981);box-shadow:0 14px 34px -10px rgba(6,182,212,.8)}
+.cover-cta.alt:hover{box-shadow:0 18px 42px -8px rgba(16,185,129,.9)}
+.lobby-learn{margin-top:12px}
+#learnApp{width:100%}
+.lrn-wrap{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.lrn-top{display:flex;align-items:center;gap:10px;padding:11px 14px;flex-wrap:wrap}
+.lrn-top .lrn-brand{font-size:14px;font-weight:800;margin-right:auto}
+.lrn-main{padding:18px}
+.l1{unicode-bidi:plaintext}
+.lrn-intro{text-align:center;display:flex;flex-direction:column;gap:7px;align-items:center;margin-bottom:16px}
+.lrn-intro h2{font-size:20px;font-weight:800;line-height:1.3}
+.lrn-intro p{font-size:12px;color:var(--muted);max-width:640px;line-height:1.75}
+.lrn-bigico{font-size:44px;line-height:1}
+.lrn-set{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:end;margin-bottom:12px}
+.lrn-chk{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);cursor:pointer;padding-bottom:11px}
+.lrn-chk input{width:16px;height:16px;cursor:pointer}
+.lrn-warn{padding:12px 14px;border-radius:var(--r-md);border:1px solid rgba(245,158,11,.4);background:rgba(245,158,11,.09);color:#fcd34d;font-size:11.5px;line-height:1.7;margin-bottom:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lrn-h{font-size:12px;font-weight:800;color:#a5b4fc;letter-spacing:.4px;margin:14px 0 9px}
+.lrn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.lrn-card{text-align:left;padding:14px;border-radius:var(--r-md);border:1px solid var(--line);color:var(--txt);cursor:pointer;
+  background:linear-gradient(180deg,rgba(20,28,50,.75),rgba(12,17,32,.7));transition:.2s;display:flex;flex-direction:column;gap:8px;min-height:120px}
+.lrn-card:hover{transform:translateY(-2px);border-color:rgba(6,182,212,.6);background:rgba(28,38,66,.85)}
+.lrn-card-t{display:flex;gap:9px;align-items:center;font-size:13px;line-height:1.35}
+.lrn-ico{font-size:22px}
+.lrn-card-d{font-size:11px;color:var(--muted);line-height:1.6}
+.lrn-dots{display:flex;gap:5px;margin-top:auto}
+.lrn-dots i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.12)}
+.lrn-dots i.on{background:var(--ok)}
+.lrn-kws{display:flex;flex-wrap:wrap;gap:8px}
+.lrn-kw{padding:7px 12px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--txt);font-size:12px;font-weight:700;cursor:pointer}
+.lrn-kw:hover{border-color:var(--cyan);color:#67e8f9}
+.lrn-kwm{min-height:22px;margin-top:9px;font-size:13px;color:#cbd5e1}
+.lrn-stages{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:11px;margin-top:16px}
+.lrn-stage{text-align:left;padding:13px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(16,22,40,.7);color:var(--txt);cursor:pointer;display:flex;flex-direction:column;gap:6px;transition:.2s}
+.lrn-stage:hover{border-color:rgba(79,107,255,.7);transform:translateY(-1px)}
+.lrn-stage.lock{opacity:.55}
+.lrn-st-n{font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:8px}
+.lrn-st-b{margin-left:auto;font-size:10px;font-weight:800;color:#6ee7b7;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);padding:2px 8px;border-radius:99px}
+.lrn-st-d{font-size:11px;color:var(--muted);line-height:1.6}
+/* sesi */
+.lrn-sh{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px;font-size:13px}
+.lrn-sh .btn-chip{margin-left:auto}
+.lrn-bar{height:6px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:12px}
+.lrn-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--cyan));transition:width .35s}
+.lrn-chat{display:flex;flex-direction:column;gap:9px;min-height:180px;max-height:46vh;overflow-y:auto;padding:12px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(5,8,16,.55);scroll-behavior:smooth}
+.lrn-b{max-width:88%;padding:10px 12px;border-radius:12px;display:flex;flex-direction:column;gap:5px;animation:in .25s ease}
+.lrn-b.ai{align-self:flex-start;background:rgba(26,35,58,.7);border:1px solid rgba(255,255,255,.06);border-left:3px solid var(--brand)}
+.lrn-b.me{align-self:flex-end;background:rgba(6,182,212,.12);border:1px solid rgba(6,182,212,.28);border-left:3px solid var(--cyan)}
+.lrn-bn{font-size:9.5px;font-weight:800;color:var(--muted)}
+.lrn-bt{font-size:14px;font-weight:600;line-height:1.55;color:#e0e7ff}
+.lrn-ba,.lrn-btns{display:flex;flex-wrap:wrap;gap:7px}
+.lrn-ba button,.lrn-btns button,.lrn-mini{padding:6px 10px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);font-size:11px;font-weight:700;cursor:pointer}
+.lrn-ba button:hover,.lrn-btns button:hover,.lrn-mini:hover{border-color:var(--cyan);color:#67e8f9}
+.lrn-bm,.lrn-pm{font-size:12.5px;color:#a5f3fc;line-height:1.6;padding:6px 9px;border-radius:8px;background:rgba(6,182,212,.08);border:1px dashed rgba(6,182,212,.3)}
+.lrn-note{align-self:center;text-align:center;font-size:11px;color:var(--muted);padding:6px 12px;line-height:1.6}
+.lrn-coach{align-self:stretch;padding:11px 13px;border-radius:12px;border:1px solid var(--line-2);background:rgba(15,21,40,.9);display:flex;flex-direction:column;gap:7px;animation:in .25s ease;font-size:12.5px;line-height:1.65}
+.lrn-coach.good,.lrn-coach.ok{border-color:rgba(16,185,129,.4)}
+.lrn-coach.bad,.lrn-coach.fix{border-color:rgba(244,63,94,.4)}
+.lrn-coach.warn{border-color:rgba(245,158,11,.4)}
+.lrn-sc{align-self:flex-start;min-width:44px;text-align:center;font-weight:800;font-size:16px;padding:3px 11px;border-radius:99px;border:1px solid var(--line)}
+.lrn-sc.great{color:#6ee7b7;border-color:rgba(16,185,129,.5);background:rgba(16,185,129,.12)}
+.lrn-sc.good{color:#a5b4fc;border-color:rgba(79,107,255,.5);background:rgba(79,107,255,.12)}
+.lrn-sc.low{color:#fcd34d;border-color:rgba(245,158,11,.5);background:rgba(245,158,11,.12)}
+.lrn-cm{font-weight:700;color:#e0e7ff}
+.lrn-df{font-size:14px;font-weight:700;line-height:1.8}
+.lrn-df .ok,.lrn-target .ok{color:#6ee7b7}
+.lrn-df .bad,.lrn-target .bad{color:#fda4af;text-decoration:underline wavy rgba(244,63,94,.6);text-underline-offset:4px}
+.lrn-sd{color:var(--muted);font-size:11.5px}
+.lrn-mis{color:#cbd5e1}
+.lrn-mw{display:inline-block;margin:2px 6px 2px 0;padding:3px 9px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--line)}
+.lrn-tip{color:#fcd34d}
+.lrn-bet{color:#cbd5e1}
+.lrn-bt2{font-weight:800;color:#a5b4fc}
+.lrn-hintbox{color:#fde68a}
+.lrn-live{min-height:20px;padding:5px 12px;font-size:12px;color:var(--muted);font-style:italic}
+.lrn-panel{display:flex;flex-direction:column;gap:11px;padding:14px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(16,22,40,.72)}
+.lrn-nowsay{font-size:10.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.lrn-target{font-size:19px;font-weight:800;line-height:1.6;color:#eef2ff}
+.lrn-blank{display:inline-block;min-width:60px;text-align:center;margin:0 6px;padding:0 10px;border-bottom:3px solid var(--warn);color:#fcd34d}
+.lrn-blank.on{border-color:var(--ok);color:#6ee7b7}
+.lrn-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lrn-mic{flex:1 1 180px;padding:14px 18px;font-size:14px;font-weight:800;border-radius:99px;border:none;color:#fff;cursor:pointer;
+  background:linear-gradient(135deg,#f43f5e,#8b5cf6);box-shadow:0 12px 28px -10px rgba(244,63,94,.8)}
+.lrn-mic.on{animation:pulse 1.2s infinite;background:linear-gradient(135deg,#e11d48,#be123c)}
+.lrn-opts{display:flex;flex-direction:column;gap:9px}
+.lrn-opts.chips{flex-direction:row;flex-wrap:wrap}
+.lrn-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:12px 14px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(10,15,30,.75);color:var(--txt);font-size:13.5px;font-weight:600;cursor:pointer;line-height:1.5}
+.lrn-opt:hover:not([disabled]){border-color:var(--brand)}
+.lrn-opt.good{border-color:rgba(16,185,129,.7);background:rgba(16,185,129,.12)}
+.lrn-opt.bad{border-color:rgba(244,63,94,.6);background:rgba(244,63,94,.1);opacity:.7;text-decoration:line-through}
+.lrn-os{padding:3px 8px;border-radius:99px;background:rgba(255,255,255,.08);font-size:12px}
+.lrn-chip{padding:10px 18px;border-radius:99px;border:1px solid var(--line-2);background:rgba(10,15,30,.75);color:var(--txt);font-size:14px;font-weight:800;cursor:pointer}
+.lrn-chip:hover:not([disabled]){border-color:var(--brand)}
+.lrn-chip.good{border-color:rgba(16,185,129,.7);background:rgba(16,185,129,.14);color:#6ee7b7}
+.lrn-chip.bad{border-color:rgba(244,63,94,.6);opacity:.55;text-decoration:line-through}
+.lrn-hintline{font-size:11.5px;color:var(--muted)}
+.lrn-turn{font-size:10.5px;font-weight:800;color:var(--muted);letter-spacing:.8px}
+.lrn-think{font-size:12.5px;color:#a5f3fc}
+.lrn-type{display:flex;gap:9px}
+.lrn-type input{flex:1}
+.lrn-sum{display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.lrn-ring{width:110px;height:110px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:6px solid var(--line-2)}
+.lrn-ring b{font-size:34px;line-height:1}
+.lrn-ring span{font-size:10px;color:var(--muted)}
+.lrn-ring.great{border-color:var(--ok);color:#6ee7b7}.lrn-ring.good{border-color:var(--brand);color:#a5b4fc}.lrn-ring.low{border-color:var(--warn);color:#fcd34d}
+.lrn-kv{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;font-size:11.5px;color:var(--muted)}
+.lrn-kv span{padding:4px 10px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.lrn-rev{align-self:stretch;text-align:left;font-size:12.5px;line-height:1.7;padding:11px 13px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.lrn-rev ul{margin:4px 0 0 18px}
+.lrn-ns{font-size:12.5px;color:#a5f3fc}
+@media (max-width:620px){
+  .lrn-main{padding:13px}.lrn-set{grid-template-columns:1fr}.lrn-chk{padding-bottom:0}.lrn-grid{grid-template-columns:1fr}
+  .lrn-target{font-size:17px}.lrn-b{max-width:96%}.lrn-chat{max-height:40vh}
+}
+
 </style>
 </head>
 <body>
@@ -223,8 +342,12 @@ select option{background:#0b1020;color:var(--txt)}
         <span>🔗 Integrasi Copilot Studio</span>
         <span>🔐 Private Meeting Room</span>
         <span>📥 Notulen Siap Unduh (Word)</span>
+        <span>🎓 Latihan Bahasa Inggris Pabrik (AI Coach)</span>
       </div>
-      <button class="cover-cta" type="button" data-act="getStarted">🚀 Get Started</button>
+      <div class="cover-cta-row">
+        <button class="cover-cta" type="button" data-act="getStarted">🚀 Get Started</button>
+        <button class="cover-cta alt" type="button" data-lrn="open">🎓 Learning English</button>
+      </div>
       <div class="cover-foot">Klik tombol di atas untuk memilih atau membuat Meeting Room Anda.</div>
     </section>
     <section id="roomLobby" class="card" style="display:none">
@@ -245,6 +368,7 @@ select option{background:#0b1020;color:var(--txt)}
           <button class="btn btn-cyan" type="button" data-act="settings">⚙️ Integrasi OneDrive / Copilot</button>
           <button class="btn btn-ghost" type="button" data-act="refresh">🔄 Refresh Status Room</button>
         </div>
+        <div class="lobby-learn"><button class="btn btn-cyan" type="button" data-lrn="open">🎓 Learning English — Latihan Percakapan Bahasa Pabrik (AI Coach)</button></div>
         <div class="note">
           Room otomatis <b>unlock &amp; chat terhapus</b> bila tidak ada aktivitas lebih dari <b>3 hari</b>.
           Setelah notulen siap, room tetap terbuka <b>1 jam</b> agar semua peserta sempat download, lalu reset otomatis.
@@ -333,6 +457,17 @@ select option{background:#0b1020;color:var(--txt)}
             <div id="liveDraft"></div>
           </div>
         </div>
+      </div>
+    </section>
+    <section id="learnApp" style="display:none">
+      <div class="lrn-wrap">
+        <div class="card lrn-top">
+          <button class="btn btn-ghost btn-sm" type="button" data-lrn="back" id="lrnExit">← Kembali</button>
+          <div class="lrn-brand">🎓 Learning English</div>
+          <span class="chip" id="lrnGem">Gemini</span>
+          <button class="btn btn-ghost btn-sm" type="button" data-act="settings" title="Integrasi / Gemini API Key">⚙️</button>
+        </div>
+        <div class="card lrn-main" id="lrnBody"></div>
       </div>
     </section>
   </main>
@@ -815,7 +950,9 @@ function checkVoiceAvailability(){
     if(!warnedVoices[tgt]){ warnedVoices[tgt]=1; toast((onlineTTSEnabled()?'🌐 ':'🔇 ')+voiceInstallHint(name),'warn',14000); }
   }else{
     voiceWarn.style.display='block';
-    voiceWarn.innerHTML='🔊 Voice aktif: <b>'+esc(v.name)+'</b> ('+esc(v.lang)+')';
+    voiceWarn.innerHTML=(onlineTTSEnabled()&&onlineFirstEnabled())
+      ? '\uD83C\uDF10 Voice aktif: <b>TTS Online</b> (cadangan voice lokal: '+esc(v.name)+')'
+      : '\uD83D\uDD0A Voice aktif: <b>'+esc(v.name)+'</b> ('+esc(v.lang)+')';
     setTimeout(function(){ if(voiceWarn.innerHTML.indexOf('Voice aktif')>=0) voiceWarn.style.display='none'; },6000);
   }
 }
@@ -856,32 +993,43 @@ function splitForOnlineTTS(text){
   });
   return out;
 }
+/* TTS ONLINE-FIRST: semua bahasa (termasuk Arab/Urdu) memakai mesin suara online lebih dulu,
+   lalu otomatis pindah ke voice lokal bila online gagal. Kode bahasa dipetakan eksplisit
+   (zh-CN, zh-TW, ar, ur ...) agar tidak lagi dipotong menjadi 'zh'. */
+var ONLINE_FIRST_LANGS={ar:1,ur:1};
+var ONLINE_TTS_CODE={id:'id',en:'en',ja:'ja','zh-cn':'zh-CN','zh-tw':'zh-TW',ms:'ms',ur:'ur',vi:'vi',th:'th',ko:'ko',ar:'ar'};
+function onlineFirstEnabled(){ return CFG.onlineFirst!==false; }
+function onlineCode(lang){ var k=String(lang||'').toLowerCase(); return ONLINE_TTS_CODE[k]||k.split('-')[0]; }
 function onlineTTSUrls(text,lang){
   var q='&tl='+encodeURIComponent(lang)+'&q='+encodeURIComponent(text);
   return ['https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob'+q,
-          'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx'+q];
+          'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx'+q,
+          'https://translate.google.com/translate_tts?ie=UTF-8&client=gtx'+q];
 }
-function playOnlineTTS(text,lang,onDone){
+function playOnlineTTS(text,lang,onDone,onFail){
   var chunks=splitForOnlineTTS(text);
   if(!chunks.length){ onDone(); return; }
   var i=0, finished=false;
   function done(){ if(finished) return; finished=true; onDone(); }
+  function fail(){ if(finished) return; finished=true; (onFail||onDone)(); }
   function playNext(){
     if(i>=chunks.length){ done(); return; }
+    var first=(i===0);
     var urls=onlineTTSUrls(chunks[i++],lang), u=0;
     (function tryUrl(){
-      if(u>=urls.length){ done(); return; }
-      var audio=new Audio(urls[u++]);
+      if(u>=urls.length){ if(first) fail(); else done(); return; }
+      var audio=new Audio(urls[u++]), tried=false;
+      function next(){ if(tried) return; tried=true; tryUrl(); }
       onlineAudioEl=audio;
       audio.onended=playNext;
-      audio.onerror=function(){ tryUrl(); };   /* endpoint pertama gagal → coba endpoint cadangan */
+      audio.onerror=next;   /* endpoint gagal → coba endpoint cadangan; semua gagal → fallback voice lokal */
       var pr=audio.play();
       if(pr&&pr.catch) pr.catch(function(err){
         if(err&&err.name==='NotAllowedError'){
           audioPrimed=false;
-          toast('🔇 Browser HP memblokir suara otomatis. Ketuk tombol <b>🔊 Suara Terjemahan</b> sekali untuk mengaktifkan.','warn',9000);
+          toast('\uD83D\uDD07 Browser memblokir suara otomatis. Ketuk tombol <b>\uD83D\uDD0A Suara Terjemahan</b> sekali untuk mengaktifkan.','warn',9000);
           done();
-        }else tryUrl();
+        }else next();
       });
     })();
   }
@@ -908,10 +1056,9 @@ function resumeEngineAfterTTS(){
 function processTTS(){
   if(ttsBusy||!ttsQueue.length) return;
   var item=ttsQueue.shift(); ttsBusy=true;
-  var v=pickVoice(item.lang);
-  var ended=false, guardT=null;
+  var ended=false, guardT=null, startT=null;
   function fin(){
-    if(ended) return; ended=true; clearTimeout(guardT);
+    if(ended) return; ended=true; clearTimeout(guardT); clearTimeout(startT);
     ttsBusy=false; currentUtterance=null;
     if(!ttsQueue.length) resumeEngineAfterTTS();
     setTimeout(processTTS,120);
@@ -919,22 +1066,30 @@ function processTTS(){
   suspendEngineForTTS();
   /* Pengaman: onend sering tidak terpanggil di Chrome Android → paksa lanjut agar antrian tidak macet */
   guardT=setTimeout(fin, Math.min(30000, 5000+String(item.text).length*110));
-  if(v&&('speechSynthesis' in window)){
-    var u=new SpeechSynthesisUtterance(item.text);
+  var langKey=String(item.lang||'').toLowerCase();
+  var v=pickVoice(item.lang);
+  var canLocal=!!(v&&('speechSynthesis' in window));
+  var canOnline=onlineTTSEnabled();
+  function speakOnline(onFail){ playOnlineTTS(item.text,onlineCode(item.lang),fin,onFail); }
+  function speakLocal(onFail){
+    var u=new SpeechSynthesisUtterance(item.text), started=false, failed=false;
     currentUtterance=u;   /* simpan referensi agar tidak di-garbage-collect sebelum selesai */
-    u.voice=v; u.lang=v.lang;
-    u.rate=1.0; u.pitch=1.0; u.volume=1.0;
-    u.onend=fin;
+    u.voice=v; u.lang=v.lang; u.rate=1.0; u.pitch=1.0; u.volume=1.0;
+    function fail(){ if(failed||ended) return; failed=true; try{window.speechSynthesis.cancel();}catch(e){} onFail(); }
+    u.onstart=function(){ started=true; clearTimeout(startT); };
+    u.onend=function(){ if(!failed) fin(); };
     u.onerror=function(ev){
-      if(ev&&ev.error==='not-allowed'){ audioPrimed=false; toast('🔇 Browser memblokir suara otomatis. Ketuk tombol <b>🔊 Suara Terjemahan</b> sekali untuk mengaktifkan.','warn',9000); }
-      fin();
+      if(ev&&ev.error==='not-allowed'){ audioPrimed=false; toast('\uD83D\uDD07 Browser memblokir suara otomatis. Ketuk tombol <b>\uD83D\uDD0A Suara Terjemahan</b> sekali untuk mengaktifkan.','warn',9000); fin(); return; }
+      fail();
     };
-    try{ window.speechSynthesis.resume(); window.speechSynthesis.speak(u); }catch(e){ fin(); }
-    return;
+    startT=setTimeout(function(){ if(!started) fail(); },2500);   /* voice lokal "diam" (mis. Arab) → pindah ke online */
+    try{ window.speechSynthesis.resume(); window.speechSynthesis.speak(u); }catch(e){ fail(); }
   }
-  if(onlineTTSEnabled()){
-    var tl=String(item.lang||'').split('-')[0];
-    playOnlineTTS(item.text,tl,fin);
+  var onlineFirst=canOnline && (onlineFirstEnabled() || ONLINE_FIRST_LANGS[langKey] || !canLocal);
+  if(onlineFirst){
+    speakOnline(function(){ if(canLocal&&!ended) speakLocal(fin); else fin(); });
+  }else if(canLocal){
+    speakLocal(function(){ if(canOnline&&!ended) speakOnline(fin); else fin(); });
   }else{
     fin();
   }
@@ -1714,6 +1869,10 @@ function openSettings(){
     '<span>Gunakan <b>TTS Online</b> otomatis bila voice lokal tidak terpasang (disarankan tetap aktif)</span>'+
   '</label>'+
   '<div style="color:var(--muted);font-size:11px;margin-bottom:4px">Berlaku untuk laptop maupun HP — memakai mesin suara Google secara gratis tanpa instalasi apa pun, hanya aktif ketika voice lokal untuk bahasa tersebut tidak tersedia di perangkat.</div>'+
+  '<label style="display:flex;align-items:center;gap:9px;cursor:pointer;margin:8px 0 4px">'+
+    '<input type="checkbox" id="cfgOnlineFirst" style="width:16px;height:16px;cursor:pointer"> '+
+    '<span>Prioritaskan <b>TTS Online</b> untuk <b>semua bahasa</b> (termasuk Arab); voice lokal hanya jadi cadangan</span>'+
+  '</label>'+
   '<div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--line)"></div>'+
   '<div class="badge-soft" style="margin-bottom:8px">🤖 Mode Resume AI</div>'+
   'Pilih sumber yang akan meringkas transkrip menjadi notulen. Semua opsi selain Copilot Studio <b>tidak butuh instalasi apa pun</b> — cukup jalan dari browser ini.<br><br>'+
@@ -1748,6 +1907,7 @@ function openSettings(){
   modal({title:'⚙️ Integrasi / Mode Resume AI',message:msg,okText:'Simpan'}).then(function(ok){
     if(!ok) return;
     CFG.onlineTTS=!!(document.getElementById('cfgOnlineTTS')||{}).checked;
+    CFG.onlineFirst=!!(document.getElementById('cfgOnlineFirst')||{}).checked;
     checkVoiceAvailability();
     CFG.aiMode=(document.getElementById('cfgAiMode')||{}).value||CFG.aiMode||'copilot';
     CFG.geminiKey=(document.getElementById('cfgGeminiKey')||{}).value||CFG.geminiKey||'';
@@ -1761,6 +1921,7 @@ function openSettings(){
   setTimeout(function(){
     var ot=document.getElementById('cfgOnlineTTS');
     if(ot) ot.checked = CFG.onlineTTS!==false;
+    var ofc=document.getElementById('cfgOnlineFirst'); if(ofc) ofc.checked = CFG.onlineFirst!==false;
     var am=document.getElementById('cfgAiMode'),gk=document.getElementById('cfgGeminiKey'),gm=document.getElementById('cfgGeminiModel'),
         f=document.getElementById('cfgFlow'),r=document.getElementById('cfgResult'),d=document.getElementById('cfgFolder');
     if(am) am.value=CFG.aiMode||'copilot';
@@ -1919,6 +2080,941 @@ checkMicPermission();
 setTimeout(checkVoiceAvailability,1200);
 if(!SR) toast('⚠️ Browser tidak mendukung Speech Recognition. Gunakan Chrome atau Edge via HTTPS / localhost.','warn',10000);
 if(location.protocol==='file:') toast('ℹ️ Dibuka dari disk (file://). Mikrofon akan meminta izin berulang dan Cloud Sync terbatas — host di <b>HTTPS</b> atau <b>localhost</b>.','warn',12000);
+})();
+</script>
+<script>
+/* ============================================================
+   LEARNING ENGLISH — MODUL TERPISAH (tidak menyentuh logic translator/room)
+   - Memakai Gemini API Key yang sama dengan menu Integrasi (vb_cfg_v3)
+   - Percakapan = Inggris. Koreksi/penjelasan = bahasa pengguna (10 bahasa).
+   ============================================================ */
+(function(){
+'use strict';
+function $(id){return document.getElementById(id);}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];});}
+function jget(k,d){try{var v=JSON.parse(localStorage.getItem(k)||'null');return v==null?d:v;}catch(e){return d;}}
+function jset(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+var CFG_KEY='vb_cfg_v3',LCFG_KEY='vb_learn_cfg_v1',PROG_KEY='vb_learn_prog_v1',UI_KEY='vb_learn_ui_v1';
+function mainCfg(){return jget(CFG_KEY,{});}
+function hasKey(){return !!(mainCfg().geminiKey);}
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var isAndroid=/Android/i.test(navigator.userAgent);
+
+/* ============================================================
+   LEARNING ENGLISH — DATA SKENARIO "BAHASA PABRIK"
+   Sumber istilah: hasil pencarian Microsoft 365 (meeting Teams, transkrip,
+   email, chat, file) — final inspection, judgement OK/NG (CVIS/SQAS),
+   repair/Chousa Gumi, NG part & supplier, warehouse/STO, yard/delivery,
+   kaizen/NQI, dan Meeting Tasks / action item.
+   Format tiap skenario:
+     s1: 4 kalimat tiru
+     s2: 3 soal pilih jawaban [teks, 1=paling tepat]
+     s3: 3 soal isi kosong (w = pilihan kata, a = index yang benar)
+     q : 5 giliran obrolan bebas (q[0] = kalimat pembuka AI)
+     fr: kerangka kalimat bantuan
+   ============================================================ */
+var SCN=[
+{id:'asakai',ico:'\u2600\uFE0F',t:'Morning Meeting (Asakai) Report',ti:'Laporan Asakai (Meeting Pagi)',
+ d:'Report safety, quality and production in the daily morning meeting.',di:'Melaporkan safety, kualitas, dan produksi di meeting pagi harian.',
+ persona:'a Section Head who leads the Asakai morning meeting',
+ ctx:'Daily Asakai meeting at the vehicle delivery center. The learner reports safety incidents, quality defects, and production plan versus actual.',
+ kw:['safety','incident','plan','actual','delay','target','defect','report'],
+ s1:['Good morning. This is the daily report.','There is no safety incident today.','The production plan is one hundred units.','The actual production is ninety five units.'],
+ s2:[
+  {q:'Good morning. Any safety incident yesterday?',o:[['No incident. Safety is zero.',1],['Yes, the plan is good.',0],['The unit is OK.',0]],n:'Answer the question that was asked. For safety, say the result first: "No incident".'},
+  {q:'What is the production plan today?',o:[['The plan is one hundred units.',1],['The unit has a scratch.',0],['I am from the warehouse.',0]],n:'"Plan" means the target number for today.'},
+  {q:'Why is the actual lower than the plan?',o:[['Because some units are on hold in repair.',1],['Because the safety is zero.',0],['Because the meeting is at eight.',0]],n:'Use "because" to give the reason.'}
+ ],
+ s3:[
+  {t:'We have ____ safety incident today.',w:['no','not','none'],a:0},
+  {t:'The actual is ____ than the plan.',w:['lower','low','lowest'],a:0},
+  {t:'The delay is ____ the part shortage.',w:['because of','because','why'],a:0}
+ ],
+ q:['Good morning. Please start the daily report. How is safety today?','Thank you. How is quality? Is there any defect?','What is the production plan and the actual today?','Why is there a delay? What is the reason?','What is your next action?'],
+ fr:['There is no ___ today.','The plan is ___ and the actual is ___.','The delay is because of ___.']},
+
+{id:'judge',ico:'\uD83D\uDD0D',t:'Final Inspection Judgement (OK / NG)',ti:'Judgement Final Inspection (OK / NG)',
+ d:'Describe a defect, compare it with the standard, and decide OK or NG.',di:'Menjelaskan defect, membandingkan dengan standar, lalu menentukan OK atau NG.',
+ persona:'a quality leader who asks the inspector about a defect on a vehicle',
+ ctx:'Final inspection line. The learner is an inspector. The standard comes from CVIS and SQAS. Typical defects: scratch, gap, chipping, audio not working, back camera, side visor. Typical tools: feeler gauge, plastic ruler.',
+ kw:['scratch','gap','standard','limit','measure','zone','judgement','completion'],
+ s1:['The scratch is three millimeters.','This is within the standard, so the unit is OK.','The gap is over the limit, so the unit is NG.','Please push this unit to the repair area.'],
+ s2:[
+  {q:'What is the defect on this unit?',o:[['There is a scratch on the side visor.',1],['The unit is very fast.',0],['I want to go home.',0]],n:'Say what and where: "a scratch on the side visor".'},
+  {q:'How big is the scratch?',o:[['It is three millimeters.',1],['It is a blue color.',0],['It is on Monday.',0]],n:'Size uses a number and the unit, for example "three millimeters".'},
+  {q:'Is the unit OK or NG?',o:[['It is over the limit, so it is NG.',1],['It is under the limit, so it is NG.',0],['It is NG, so please do completion.',0]],n:'Over the limit means NG. Under the limit means OK. Do not do completion for an NG unit.'}
+ ],
+ s3:[
+  {t:'The gap is ____ the limit.',w:['over','on','in'],a:0},
+  {t:'The scratch does not ____ on the fingernail.',w:['catch','catches','caught'],a:0},
+  {t:'Please measure it with a feeler ____.',w:['gauge','paper','door'],a:0}
+ ],
+ q:['Please check this unit. What is the defect?','Where is the defect? Which part?','How many millimeters is it?','Is it OK or NG? Please explain.','What is your next action for this unit?'],
+ fr:['There is a ___ on the ___.','It is ___ millimeters, so it is ___.','I will push this unit to ___.']},
+
+{id:'repair',ico:'\uD83D\uDD27',t:'Repair & Chousa Gumi Status',ti:'Status Repair & Chousa Gumi',
+ d:'Explain repair status, cause, action, and when the unit will be ready.',di:'Menjelaskan status repair, penyebab, tindakan, dan kapan unit siap.',
+ persona:'a repair area supervisor who asks about a unit that came from final inspection',
+ ctx:'Repair area (Chousa Gumi). Units are on hold, waiting for parts, calibration or adjustment. Typical problems: horn always on, audio not scan, door touching, cover gap, installation or handling cause.',
+ kw:['repair','hold','part','replace','recheck','cause','installation','status'],
+ s1:['This unit is on hold in the repair area.','The audio is not working.','We will replace the part and check it again.','The repair is finished. Please do the recheck.'],
+ s2:[
+  {q:'What is the status of this unit?',o:[['It is on hold. We are waiting for the part.',1],['It is finished. We are waiting for the part.',0],['It is on hold. We finished the part.',0]],n:'"On hold" means waiting. If you are waiting, the work is not finished yet.'},
+  {q:'What is the problem?',o:[['The horn stays on all the time.',1],['The horn goes to the dealer.',0],['The horn is five millimeters.',0]],n:'Describe the symptom of the part: "The horn stays on".'},
+  {q:'What is your action?',o:[['I will replace the part and recheck.',1],['I am replace the part.',0],['I replaced the part tomorrow.',0]],n:'For a plan, use "I will" + base verb: "I will replace".'}
+ ],
+ s3:[
+  {t:'The unit is ____ hold.',w:['on','in','at'],a:0},
+  {t:'We will ____ the part.',w:['replace','replaced','replacing'],a:0},
+  {t:'The audio does not ____.',w:['work','works','working'],a:0}
+ ],
+ q:['What is the status of this unit?','What is the problem? Please explain.','What is the cause? Is it the part, installation, or handling?','What is your repair action?','When will the unit be ready?'],
+ fr:['The unit is on ___ because ___.','The cause is ___.','I will ___ and the unit will be ready at ___.']},
+
+{id:'supplier',ico:'\uD83D\uDCE6',t:'NG Part & Supplier Claim',ti:'Part NG & Klaim ke Supplier',
+ d:'Report an NG part to a supplier and ask for a replacement.',di:'Melaporkan part NG ke supplier dan meminta penggantian.',
+ persona:'a supplier quality contact who receives an NG part report',
+ ctx:'Quality control of incoming parts. The learner reports an NG part ticket: part name, defect (crack, scratch, chipping, wrong spec), quantity, when it was found, and asks for a replacement part.',
+ kw:['supplier','NG part','ticket','defect','crack','replacement','quantity','claim'],
+ s1:['This part is NG. It has a crack.','I made a ticket for the supplier.','Please send a replacement part.','This defect happened three times this month.'],
+ s2:[
+  {q:'What is wrong with this part?',o:[['It has a crack on the cover.',1],['It has a delivery on the cover.',0],['It is a ticket to the dealer.',0]],n:'Use "It has a" + defect: "It has a crack".'},
+  {q:'What do you need from us?',o:[['Please send a replacement part.',1],['Please check the dealer.',0],['I send replacement part you.',0]],n:'"Please send" is polite and clear.'},
+  {q:'How often does this defect happen?',o:[['It happened three times this month.',1],['It will happen last month.',0],['It happens in the yard.',0]],n:'Something that already happened uses the past tense: "happened".'}
+ ],
+ s3:[
+  {t:'I will make a ____ for the supplier.',w:['ticket','table','taxi'],a:0},
+  {t:'The part has a ____.',w:['crack','cracks','cracking'],a:0},
+  {t:'Please send the ____ part.',w:['replacement','replace','replaced'],a:0}
+ ],
+ q:['Hello, this is the supplier. I heard there is an NG part. What is the defect?','Which part number, and how many pieces?','When did you find it? In receiving or on the line?','What do you need from us?','We will check and reply tomorrow. Is that OK?'],
+ fr:['The defect is ___ on the ___.','We found ___ pieces on ___.','Please ___ by ___.']},
+
+{id:'warehouse',ico:'\uD83C\uDFEC',t:'Warehouse, Receiving & Stock Opname',ti:'Warehouse, Receiving & Stock Opname',
+ d:'Talk about part shortage, stock difference, and recount.',di:'Membahas part kurang, selisih stok, dan hitung ulang.',
+ persona:'a warehouse section head who checks part availability for a unit',
+ ctx:'Warehouse and receiving. Typical topics: part shortage (cripple part), miss order, supplier delay, stock difference between system and actual, recount (STO), shopping part for the line.',
+ kw:['receiving','shortage','stock','order','shopping','count','shelf','system'],
+ s1:['The part arrived from the supplier today.','There is a part shortage for this unit.','The stock count is different from the system.','I will recount the part and update the data.'],
+ s2:[
+  {q:'Is the part complete for this unit?',o:[['No, one part is short.',1],['No, the part is a unit.',0],['Yes, the shortage is complete.',0]],n:'"Short" or "shortage" means not enough.'},
+  {q:'Why is the stock different?',o:[['Maybe there was a mistake in the order.',1],['Maybe the shelf is happy.',0],['Maybe the dealer is tomorrow.',0]],n:'Use "Maybe" when you are not sure about the reason.'},
+  {q:'What will you do next?',o:[['I will recount and update the system.',1],['I recount and updated system.',0],['I am will recount the system.',0]],n:'Use "I will" + base verb: "I will recount".'}
+ ],
+ s3:[
+  {t:'One part is ____.',w:['short','shorts','shorten'],a:0},
+  {t:'The stock is different ____ the system.',w:['from','with','to'],a:0},
+  {t:'I will ____ the shelf.',w:['check','checks','checked'],a:0}
+ ],
+ q:['Good afternoon. Is the part ready for this unit?','Which part is short, and how many?','Why did this happen? Was it the order or the supplier?','How will you solve it?','When will the part arrive?'],
+ fr:['The part ___ is short by ___ pieces.','It happened because ___.','The part will arrive on ___.']},
+
+{id:'delivery',ico:'\uD83D\uDE9A',t:'Yard, Delivery & Dealer',ti:'Yard, Delivery & Dealer',
+ d:'Explain delivery schedule, ETA, yard defects, and lead time.',di:'Menjelaskan jadwal pengiriman, ETA, defect di yard, dan lead time.',
+ persona:'a delivery coordinator who asks about units going to the dealer',
+ ctx:'Yard and delivery. Typical topics: unit ready for delivery, car carrier schedule, ETA to the dealer, yard defect such as scratch or stain on a panel, lead time longer than plan, countermeasure.',
+ kw:['delivery','dealer','yard','lead time','ETA','car carrier','schedule','arrive'],
+ s1:['The unit is ready for delivery to the dealer.','The car carrier will leave at ten in the morning.','The estimated arrival is tomorrow morning.','We found a scratch in the yard, so we will check it again.'],
+ s2:[
+  {q:'When will the unit arrive at the dealer?',o:[['It will arrive tomorrow morning.',1],['It arrived tomorrow morning.',0],['It is arriving yesterday.',0]],n:'For the future, use "will": "It will arrive".'},
+  {q:'Is there any problem with this unit?',o:[['Yes, there is a scratch on the upper panel.',1],['Yes, the dealer is a scratch.',0],['No, the scratch is very big.',0]],n:'Say "Yes" first, then explain the problem.'},
+  {q:'Why is the lead time longer?',o:[['Because the car carrier was late.',1],['Because the car carrier will be late.',0],['Because the lead time is shorter.',0]],n:'Use the past tense "was" for something that already happened.'}
+ ],
+ s3:[
+  {t:'The unit will ____ tomorrow.',w:['arrive','arrived','arrives'],a:0},
+  {t:'The car carrier is ____.',w:['late','lately','later'],a:0},
+  {t:'We will deliver the unit ____ the dealer.',w:['to','at','in'],a:0}
+ ],
+ q:['Hello. Is this unit ready to deliver to the dealer?','What is the ETA to the dealer?','Is there any defect in the yard? Please explain.','Why is the lead time longer than the plan?','What is your countermeasure?'],
+ fr:['The unit will arrive at ___ on ___.','There is a ___ in the ___.','The countermeasure is ___.']},
+
+{id:'kaizen',ico:'\uD83D\uDCA1',t:'Kaizen & Innovation Presentation',ti:'Presentasi Kaizen & Inovasi',
+ d:'Present problem, root cause, countermeasure, result, and benefit.',di:'Mempresentasikan masalah, akar masalah, countermeasure, hasil, dan benefit.',
+ persona:'a coach or judge who listens to a kaizen presentation in English',
+ ctx:'QCC or innovation coaching clinic held in English. The learner presents: problem, root cause (5 Why), countermeasure, result with numbers, benefit versus cost (NQI), and standardization.',
+ kw:['problem','root cause','countermeasure','result','benefit','cost','standard','improvement'],
+ s1:['The problem is misjudgement in final inspection.','The root cause is too many pages of standards.','Our countermeasure is an AI assistant.','The judgement time is now sixteen seconds.'],
+ s2:[
+  {q:'What is the problem?',o:[['The problem is misjudgement in final inspection.',1],['The problem is the countermeasure.',0],['The problem is the result.',0]],n:'"Problem" means what is wrong now.'},
+  {q:'What is the root cause?',o:[['The root cause is that standards are hard to find.',1],['The root cause is that the result is good.',0],['The root cause is the AI.',0]],n:'"Root cause" is the real reason behind the problem.'},
+  {q:'What is the result?',o:[['The judgement time is faster and misjudgement is zero.',1],['The result is the problem.',0],['The result will be a root cause.',0]],n:'"Result" is what changed after the countermeasure.'}
+ ],
+ s3:[
+  {t:'There are too ____ standards.',w:['many','much','more'],a:0},
+  {t:'We ____ an AI assistant.',w:['made','make','making'],a:0},
+  {t:'The benefit is higher than the ____.',w:['cost','coast','post'],a:0}
+ ],
+ q:['Please introduce your improvement. What is the problem?','What is the root cause?','What is your countermeasure?','What is the result? Please give numbers.','What is the benefit compared with the cost?'],
+ fr:['The problem is ___ in ___.','The root cause is ___.','After the countermeasure, ___ changed from ___ to ___.']},
+
+{id:'meeting',ico:'\uD83D\uDCAC',t:'Teams Meeting & Email Follow-up',ti:'Meeting Teams & Follow-up Email',
+ d:'Clarify, confirm action items, and promise due dates politely.',di:'Meminta klarifikasi, konfirmasi action item, dan menjanjikan due date dengan sopan.',
+ persona:'a coordinator from another Toyota affiliate in an online Teams meeting',
+ ctx:'Online Teams meeting and email follow-up. The learner shares an update, asks for clarification, agrees on action items, owner and due date, and thanks the other side for support.',
+ kw:['agenda','action item','due date','clarify','schedule','follow up','confirm','support'],
+ s1:['Could you repeat that, please?','I will send the report by Friday.','Let me confirm the action item.','Thank you for the support.'],
+ s2:[
+  {q:'Did you understand the schedule?',o:[['Sorry, could you repeat that, please?',1],['Sorry, repeat you.',0],['I understood tomorrow.',0]],n:'"Could you ... , please?" is a polite way to ask.'},
+  {q:'Who will send the report?',o:[['I will send it by Friday.',1],['I sent it by next Friday.',0],['I will sending it Friday.',0]],n:'Promise with "I will" + base verb, then the due date with "by".'},
+  {q:'Do you have any question?',o:[['Yes. Could you clarify the due date?',1],['Yes. Clarify me the date.',0],['No. The due date is clarify.',0]],n:'"Clarify" is a verb. Use "Could you clarify ...?".'}
+ ],
+ s3:[
+  {t:'Could you ____ that, please?',w:['repeat','repeating','repeated'],a:0},
+  {t:'I will send it ____ Friday.',w:['by','from','at'],a:0},
+  {t:'Let me ____ the due date.',w:['confirm','confirms','confirmed'],a:0}
+ ],
+ q:['Hello, let us start the meeting. Could you share your update?','Thank you. Do you have any question about the schedule?','Who will do the action item, and when is the due date?','Can you confirm that you will send the report by Friday?','Great. Thank you for your support.'],
+ fr:['Could you ___, please?','I will ___ by ___.','Let me confirm: ___.']}
+];
+
+
+/* ---------- bahasa penjelasan (L1) ---------- */
+var L1S=[['id','Bahasa Indonesia'],['ja','\u65E5\u672C\u8A9E \u2014 Japanese'],['zh-CN','\u4E2D\u6587 \u2014 Mandarin (China)'],['zh-TW','\u570B\u8A9E \u2014 Taiwan (\u7E41\u9AD4)'],
+  ['ms','Bahasa Melayu \u2014 Malaysia'],['ur','\u0627\u0631\u062F\u0648 \u2014 Urdu (Pakistan)'],['vi','Ti\u1EBFng Vi\u1EC7t \u2014 Vietnamese'],['th','\u0E44\u0E17\u0E22 \u2014 Thai'],
+  ['ko','\uD55C\uAD6D\uC5B4 \u2014 Korean'],['ar','\u0627\u0644\u0639\u0631\u0628\u064A\u0629 \u2014 Arabic']];
+var L1EN={id:'Indonesian',ja:'Japanese','zh-CN':'Simplified Chinese','zh-TW':'Traditional Chinese (Taiwan)',ms:'Malay',ur:'Urdu',vi:'Vietnamese',th:'Thai',ko:'Korean',ar:'Arabic'};
+
+var UI_EN={
+ title:'Learning English \u2014 Factory Conversation Practice',
+ sub:'Practice the English we really use in the plant: meetings, emails and chats. You speak English, the coach explains in your language.',
+ myLang:'My language (for explanations)',free:'Free mode: unlock all stages',pick:'Choose a topic',
+ s1:'Stage 1 \u00B7 Repeat',s2:'Stage 2 \u00B7 Choose',s3:'Stage 3 \u00B7 Complete',s4:'Stage 4 \u00B7 Free talk',
+ s1d:'Listen, then say the sentence.',s2d:'Pick the best answer, then say it.',s3d:'Fill the blank, then say the full sentence.',s4d:'Talk freely with the AI coach.',
+ locked:'Locked. Finish the previous stage with a score of 60 or more.',
+ kw:'Key words (tap to listen and see the meaning)',back:'Back',topics:'All topics',
+ listen:'Listen',slow:'Slow',speak:'Speak',stop:'Stop',meaning:'Meaning',hint:'Help me',skip:'Skip',next:'Next',retry:'Try again',
+ said:'You said',target:'Target sentence',miss:'Missing or unclear words',why:'Why',now:'Now say this:',
+ great:'Excellent!',good:'Good job!',again:'Almost there. Try again.',
+ listening:'Listening\u2026 speak now',nospeech:'I did not hear you. Tap the mic and try again.',
+ nomic:'Speech recognition is not available in this browser. Please use Chrome or Edge, or type your answer.',
+ type:'Or type your answer in English',send:'Send',
+ sum:'Session summary',avg:'Average score',done:'Items',newwords:'Words to review',nextstep:'Next step',
+ unlocked:'Next stage unlocked!',again2:'Practice this stage once more to reach 60.',
+ nokey:'Gemini API Key is not set. Free talk runs in basic mode (scripted questions, no AI corrections). Add the key in Integrations to switch on the AI coach.',
+ setkey:'Set Gemini API Key',thinking:'AI coach is thinking\u2026',
+ aifail:'The AI coach could not answer. Check your connection and API Key.',
+ better:'Better version',hintsleft:'hints left',copy:'Copy summary',copied:'Summary copied to clipboard.',
+ pickfirst:'Tap one answer first.',wrong:'Another answer fits better. Read the tip and try again.',right:'Correct choice! Now say it aloud.',
+ filled:'Correct! Now say the full sentence.',wrongw:'Another word fits better. Try again.',
+ voiceon:'AI voice: ON',voiceoff:'AI voice: OFF',gemon:'Gemini AI: ON',gemoff:'Gemini AI: OFF',
+ tip1:'Say it slowly and look at the red words.',repeat:'Repeat this stage',nextstage:'Next stage',
+ frame:'Sentence frame',hintnone:'No hints left in this session.',turn:'Turn',basic:'Basic mode: no AI correction for this turn.',
+ meanused:'Meanings opened',skipped:'Skipped',tryfree:'Free talk is ready. Answer the AI in English.',
+ topicdone:'Stage completed',score:'Score',aiRole:'AI coach',you:'You',sumbtn:'See summary'
+};
+var UI_ID={
+ title:'Learning English \u2014 Latihan Percakapan Bahasa Pabrik',
+ sub:'Latihan bahasa Inggris yang benar-benar dipakai di pabrik: meeting, email, dan chat. Anda berbicara Inggris, pelatih AI menjelaskan dalam bahasa Anda.',
+ myLang:'Bahasa saya (untuk penjelasan)',free:'Mode bebas: buka semua tahap',pick:'Pilih topik latihan',
+ s1:'Tahap 1 \u00B7 Tiru',s2:'Tahap 2 \u00B7 Pilih',s3:'Tahap 3 \u00B7 Lengkapi',s4:'Tahap 4 \u00B7 Bebas',
+ s1d:'Dengarkan, lalu ucapkan kalimatnya.',s2d:'Pilih jawaban terbaik, lalu ucapkan.',s3d:'Isi bagian kosong, lalu ucapkan kalimat lengkap.',s4d:'Ngobrol bebas dengan pelatih AI.',
+ locked:'Terkunci. Selesaikan tahap sebelumnya dengan skor 60 atau lebih.',
+ kw:'Kata kunci (ketuk untuk mendengar & melihat arti)',back:'Kembali',topics:'Semua topik',
+ listen:'Dengar',slow:'Pelan',speak:'Ucapkan',stop:'Berhenti',meaning:'Arti',hint:'Bantu saya',skip:'Lewati',next:'Lanjut',retry:'Coba lagi',
+ said:'Anda mengucapkan',target:'Kalimat target',miss:'Kata yang terlewat / kurang jelas',why:'Kenapa',now:'Sekarang ucapkan:',
+ great:'Luar biasa!',good:'Bagus!',again:'Hampir benar. Coba sekali lagi.',
+ listening:'Mendengarkan\u2026 silakan bicara',nospeech:'Suara Anda tidak terdengar. Ketuk mikrofon dan coba lagi.',
+ nomic:'Pengenalan suara tidak tersedia di browser ini. Gunakan Chrome atau Edge, atau ketik jawaban Anda.',
+ type:'Atau ketik jawaban Anda dalam bahasa Inggris',send:'Kirim',
+ sum:'Ringkasan sesi',avg:'Skor rata-rata',done:'Jumlah soal',newwords:'Kata untuk diulang',nextstep:'Langkah berikutnya',
+ unlocked:'Tahap berikutnya terbuka!',again2:'Ulangi tahap ini sekali lagi untuk mencapai skor 60.',
+ nokey:'Gemini API Key belum diisi. Tahap bebas berjalan dalam mode dasar (pertanyaan skrip, tanpa koreksi AI). Isi key di menu Integrasi untuk mengaktifkan pelatih AI.',
+ setkey:'Isi Gemini API Key',thinking:'Pelatih AI sedang berpikir\u2026',
+ aifail:'Pelatih AI gagal menjawab. Periksa koneksi dan API Key.',
+ better:'Versi yang lebih baik',hintsleft:'bantuan tersisa',copy:'Salin ringkasan',copied:'Ringkasan disalin.',
+ pickfirst:'Ketuk salah satu jawaban dulu.',wrong:'Ada jawaban lain yang lebih cocok. Baca tips-nya lalu coba lagi.',right:'Pilihan tepat! Sekarang ucapkan dengan suara.',
+ filled:'Benar! Sekarang ucapkan kalimat lengkapnya.',wrongw:'Ada kata lain yang lebih cocok. Coba lagi.',
+ voiceon:'Suara AI: ON',voiceoff:'Suara AI: OFF',gemon:'Gemini AI: ON',gemoff:'Gemini AI: OFF',
+ tip1:'Ucapkan pelan-pelan dan perhatikan kata berwarna merah.',repeat:'Ulangi tahap ini',nextstage:'Tahap berikutnya',
+ frame:'Kerangka kalimat',hintnone:'Bantuan untuk sesi ini sudah habis.',turn:'Giliran',basic:'Mode dasar: tidak ada koreksi AI untuk giliran ini.',
+ meanused:'Arti yang dibuka',skipped:'Dilewati',tryfree:'Tahap bebas siap. Jawab AI dalam bahasa Inggris.',
+ topicdone:'Tahap selesai',score:'Skor',aiRole:'Pelatih AI',you:'Anda',sumbtn:'Lihat ringkasan'
+};
+var UI_CACHE=jget(UI_KEY,{});
+
+/* ---------- state ---------- */
+var LC=jget(LCFG_KEY,{l1:'id',free:false,voice:true});
+var S={l1:LC.l1||'id',free:!!LC.free,voice:LC.voice!==false,view:'home',scn:null,stage:0,idx:0,total:0,results:[],texts:[],hints:3,meanUsed:0,
+  cur:null,busy:false,listening:false,rec:null,t4:null,from:'cover',prevChip:'',uiBusy:0};
+function saveLC(){jset(LCFG_KEY,{l1:S.l1,free:S.free,voice:S.voice});}
+function T(k){var d=(S.l1==='id')?UI_ID:(UI_CACHE[S.l1]||{});return d[k]||UI_EN[k]||k;}
+function prog(){return jget(PROG_KEY,{});}
+function best(sid,st){var p=prog();return (p[sid]&&p[sid][st])||0;}
+function saveBest(sid,st,v){var p=prog();p[sid]=p[sid]||{};if(!p[sid][st]||v>p[sid][st])p[sid][st]=v;jset(PROG_KEY,p);}
+function unlocked(sc,st){return S.free||st===1||best(sc.id,st-1)>=60;}
+
+/* ---------- toast ---------- */
+function toast(msg,kind,ms){
+  var w=$('toastWrap');if(!w)return;
+  var el=document.createElement('div');el.className='toast '+(kind||'');el.innerHTML=msg;w.appendChild(el);
+  setTimeout(function(){el.style.transition='.4s';el.style.opacity='0';setTimeout(function(){el.remove();},400);},ms||4500);
+}
+function fetchT(url,opt,ms){
+  var ctrl=('AbortController' in window)?new AbortController():null;
+  var o=Object.assign({},opt||{});if(ctrl)o.signal=ctrl.signal;
+  var t=setTimeout(function(){if(ctrl)ctrl.abort();},ms||8000);
+  return fetch(url,o).then(function(r){clearTimeout(t);return r;},function(e){clearTimeout(t);throw e;});
+}
+
+/* ---------- terjemahan EN -> L1 (rantai mesin, sama seperti translator) ---------- */
+var TC={};
+var ENG=[
+ function(t,sl,tl){return fetchT('https://translate.googleapis.com/translate_a/single?client=gtx&sl='+sl+'&tl='+tl+'&dt=t&q='+encodeURIComponent(t),null,8000)
+   .then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){var o='';if(d&&d[0])for(var i=0;i<d[0].length;i++)if(d[0][i][0])o+=d[0][i][0];return o.trim();});},
+ function(t,sl,tl){return fetchT('https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl='+sl+'&tl='+tl+'&q='+encodeURIComponent(t),null,8000)
+   .then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){
+     if(Array.isArray(d)&&typeof d[0]==='string')return d.join(' ').trim();
+     if(Array.isArray(d)&&Array.isArray(d[0]))return d[0].map(function(x){return Array.isArray(x)?x[0]:x;}).join('').trim();
+     if(d&&d.sentences)return d.sentences.map(function(s){return s.trans||'';}).join('').trim();return '';});},
+ function(t,sl,tl){return fetchT('https://lingva.ml/api/v1/'+encodeURIComponent(sl)+'/'+encodeURIComponent(tl)+'/'+encodeURIComponent(t),null,9000)
+   .then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){return String((d&&d.translation)||'').trim();});},
+ function(t,sl,tl){return fetchT('https://api.mymemory.translated.net/get?q='+encodeURIComponent(t)+'&langpair='+encodeURIComponent(sl)+'|'+encodeURIComponent(tl),null,9000)
+   .then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){return String((d&&d.responseData&&d.responseData.translatedText)||'').trim();});}
+];
+var engStart=0;
+function tr(text,to,from){
+  from=from||'en';text=String(text||'').trim();
+  if(!text||to===from)return Promise.resolve(text);
+  var key=from+'>'+to+'|'+text;if(TC[key])return Promise.resolve(TC[key]);
+  var i=0;
+  function next(){
+    if(i>=ENG.length)return Promise.reject(new Error('tr'));
+    var idx=(engStart+i)%ENG.length;i++;
+    return ENG[idx](text,from,to).then(function(o){if(!o)throw 0;engStart=idx;TC[key]=o;return o;}).catch(function(){return next();});
+  }
+  return next();
+}
+/* isi elemen [data-tr] dengan terjemahan L1 (data-id = teks Indonesia statis bila ada) */
+function fillTr(root){
+  if(!root)return;
+  var els=root.querySelectorAll('[data-tr]');
+  for(var i=0;i<els.length;i++)(function(el){
+    var en=el.getAttribute('data-tr'),idv=el.getAttribute('data-id');
+    el.setAttribute('dir','auto');
+    if(S.l1==='id'&&idv){el.textContent=idv;return;}
+    if(!el.textContent)el.textContent=en;
+    tr(en,S.l1).then(function(o){el.textContent=o;}).catch(function(){});
+  })(els[i]);
+}
+/* muat UI untuk bahasa non-Indonesia: terjemahkan kamus UI_EN sekali, simpan di localStorage */
+function loadUI(){
+  var l=S.l1;if(l==='id')return;
+  UI_CACHE[l]=UI_CACHE[l]||{};
+  var keys=Object.keys(UI_EN).filter(function(k){return !UI_CACHE[l][k];});
+  if(!keys.length)return;
+  var pos=0,active=0,fin=0,total=keys.length;S.uiBusy++;
+  function pump(){
+    while(active<5&&pos<keys.length){
+      (function(k){
+        active++;
+        tr(UI_EN[k],l).then(function(o){UI_CACHE[l][k]=o;}).catch(function(){}).then(function(){
+          active--;fin++;
+          if(fin>=total){jset(UI_KEY,UI_CACHE);S.uiBusy--;if(S.l1===l&&(S.view==='home'||S.view==='scn'))render();}
+          else pump();
+        });
+      })(keys[pos++]);
+    }
+  }
+  pump();
+}
+
+/* ---------- suara Inggris (online-first + cadangan voice lokal) ---------- */
+var spkTok=0,spkAudio=null,warnedSpk=false,audioPrimed=false;
+function primeAudio(){
+  if(audioPrimed)return;audioPrimed=true;
+  try{if('speechSynthesis' in window){var u=new SpeechSynthesisUtterance(' ');u.volume=0;window.speechSynthesis.speak(u);}}catch(e){}
+  try{var a=new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');a.volume=0;var pr=a.play();if(pr&&pr.catch)pr.catch(function(){});}catch(e){}
+}
+function splitTTS(text){
+  text=String(text||'').trim();var max=180,parts=[],buf='';
+  var pieces=text.match(/[^.!?]+[.!?]*\s*/g)||[text];
+  pieces.map(function(s){return s.trim();}).filter(Boolean).forEach(function(p){
+    if((buf+' '+p).trim().length>max&&buf){parts.push(buf.trim());buf=p;}else buf=(buf?buf+' ':'')+p;
+  });
+  if(buf.trim())parts.push(buf.trim());return parts;
+}
+function ttsUrls(t,slow){
+  var q='&tl=en&q='+encodeURIComponent(t)+(slow?'&ttsspeed=0.3':'');
+  return ['https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob'+q,
+          'https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx'+q,
+          'https://translate.google.com/translate_tts?ie=UTF-8&client=gtx'+q];
+}
+function playOnline(text,slow,my){
+  return new Promise(function(res){
+    var chunks=splitTTS(text),i=0,okFirst=false;
+    function nextChunk(){
+      if(my!==spkTok){res(false);return;}
+      if(i>=chunks.length){res(true);return;}
+      var first=(i===0),urls=ttsUrls(chunks[i++],slow),u=0;
+      (function tryUrl(){
+        if(my!==spkTok){res(false);return;}
+        if(u>=urls.length){if(first)res(false);else res(true);return;}
+        var a=new Audio(urls[u++]),tried=false;
+        function bad(){if(tried)return;tried=true;tryUrl();}
+        spkAudio=a;a.onended=function(){okFirst=true;nextChunk();};a.onerror=bad;
+        var pr=a.play();
+        if(pr&&pr.catch)pr.catch(function(err){
+          if(err&&err.name==='NotAllowedError'){audioPrimed=false;toast('\uD83D\uDD07 Browser memblokir suara otomatis. Ketuk tombol \uD83D\uDD0A sekali.','warn',6000);res(true);}
+          else bad();
+        });
+      })();
+    }
+    nextChunk();
+  });
+}
+function enVoice(){
+  if(!('speechSynthesis' in window))return null;
+  var vs=window.speechSynthesis.getVoices()||[],best=null,bs=-1;
+  vs.forEach(function(v){
+    var l=String(v.lang||'').toLowerCase().replace('_','-');if(l.indexOf('en')!==0)return;
+    var n=String(v.name||'').toLowerCase(),s=0;
+    if(l==='en-us')s+=20;if(/natural|neural/.test(n))s+=40;if(/google/.test(n))s+=30;if(v.localService===false)s+=10;if(/espeak|compact|pico/.test(n))s-=50;
+    if(s>bs){bs=s;best=v;}
+  });
+  return best;
+}
+function playLocal(text,slow,my){
+  return new Promise(function(res){
+    var v=enVoice();if(!v||my!==spkTok){res(false);return;}
+    var u=new SpeechSynthesisUtterance(text),started=false,done=false;
+    function fin(ok){if(done)return;done=true;clearTimeout(st);clearTimeout(guard);res(ok);}
+    u.voice=v;u.lang=v.lang;u.rate=slow?0.62:0.95;u.volume=1;
+    u.onstart=function(){started=true;clearTimeout(st);};u.onend=function(){fin(true);};u.onerror=function(){fin(false);};
+    var st=setTimeout(function(){if(!started){try{window.speechSynthesis.cancel();}catch(e){}fin(false);}},2500);
+    var guard=setTimeout(function(){fin(started);},Math.min(30000,5000+text.length*140));
+    try{window.speechSynthesis.cancel();window.speechSynthesis.resume();window.speechSynthesis.speak(u);}catch(e){fin(false);}
+  });
+}
+function stopSpeak(){
+  spkTok++;
+  try{window.speechSynthesis.cancel();}catch(e){}
+  if(spkAudio){try{spkAudio.pause();spkAudio.onended=null;spkAudio.onerror=null;}catch(e){}spkAudio=null;}
+}
+function speak(text,slow){
+  stopSpeak();var my=spkTok;
+  var firstLocal=slow&&enVoice();
+  var chain=firstLocal?playLocal(text,slow,my).then(function(ok){return ok?true:playOnline(text,slow,my);})
+                      :playOnline(text,slow,my).then(function(ok){return ok?true:playLocal(text,slow,my);});
+  return chain.then(function(ok){
+    if(!ok&&my===spkTok&&!warnedSpk){warnedSpk=true;toast('\uD83D\uDD07 Suara Inggris tidak bisa diputar (jaringan memblokir TTS dan voice lokal tidak ada). Teks tetap tampil.','warn',8000);}
+    return ok;
+  });
+}
+
+/* ---------- penilaian ucapan (lokal, tanpa AI) ---------- */
+var FUZZ={ng:1,cvis:1,ecvis:1,sqas:1,nvdc:1,ppo:1,pdi:1,sto:1,fqpr:1,kpi:1,qcc:1,nqi:1,mdp:1,vin:1,chousa:1,gumi:1,genba:1,yokoten:1,kaizen:1,asakai:1,tanoko:1,jac:1,eta:1};
+var ONES=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+var TENS=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+function n2w(n){
+  if(n<20)return ONES[n];
+  if(n<100)return TENS[Math.floor(n/10)]+(n%10?' '+ONES[n%10]:'');
+  if(n<1000)return ONES[Math.floor(n/100)]+' hundred'+(n%100?' '+n2w(n%100):'');
+  return String(n);
+}
+var SYN={okay:'ok',millimeter:'millimeters',mm:'millimeters',centimeter:'centimeters'};
+function normWord(w){
+  w=String(w||'').toLowerCase().replace(/[\u2019']/g,'').replace(/-/g,'').replace(/[^a-z0-9\u00C0-\u024F]/g,'');
+  return SYN[w]||w;
+}
+function tokTarget(text){return String(text||'').split(/\s+/).filter(Boolean).map(function(r){return {raw:r,n:normWord(r)};});}
+function tokSaid(text){
+  var out=[];
+  String(text||'').split(/\s+/).filter(Boolean).forEach(function(r){
+    var m=/^(\d+)([a-zA-Z]+)$/.exec(r);
+    if(m){n2w(parseInt(m[1],10)).split(' ').forEach(function(x){out.push(x);});out.push(normWord(m[2]));return;}
+    if(/^\d+$/.test(r)){n2w(parseInt(r,10)).split(' ').forEach(function(x){out.push(x);});return;}
+    var n=normWord(r);if(n)out.push(n);
+  });
+  return out;
+}
+function grade(target,said){
+  var tw=tokTarget(target),sw=tokSaid(said).filter(function(w){return !FUZZ[w];});
+  var idxs=[];tw.forEach(function(t,i){if(t.n&&!FUZZ[t.n])idxs.push(i);});
+  var n=idxs.length,m=sw.length,mask=tw.map(function(t){return !t.n||!!FUZZ[t.n];});
+  if(!n)return {score:100,mask:mask,missing:[],words:tw.map(function(t){return t.raw;})};
+  var dp=[],i,j;
+  for(i=0;i<=n;i++){dp.push(new Array(m+1).fill(0));}
+  for(i=1;i<=n;i++)for(j=1;j<=m;j++){
+    dp[i][j]=(tw[idxs[i-1]].n===sw[j-1])?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  }
+  i=n;j=m;
+  while(i>0&&j>0){
+    if(tw[idxs[i-1]].n===sw[j-1]){mask[idxs[i-1]]=true;i--;j--;}
+    else if(dp[i-1][j]>=dp[i][j-1])i--;else j--;
+  }
+  var matched=dp[n][m],extra=m-matched,score=Math.round(100*matched/n);
+  if(extra>3)score-=Math.min(15,(extra-3)*3);
+  score=Math.max(0,Math.min(100,score));
+  var missing=[];idxs.forEach(function(k){if(!mask[k])missing.push(tw[k].n);});
+  return {score:score,mask:mask,missing:missing,words:tw.map(function(t){return t.raw;})};
+}
+function diffHtml(g){
+  return g.words.map(function(w,i){return '<span class="'+(g.mask[i]?'ok':'bad')+'">'+esc(w)+'</span>';}).join(' ');
+}
+window.__vbLearn={grade:grade,tokSaid:tokSaid};
+
+/* ---------- Gemini ---------- */
+function gem(system,userText){
+  var cfg=mainCfg();if(!cfg.geminiKey)return Promise.reject(new Error('nokey'));
+  var model=cfg.geminiModel||'gemini-2.0-flash';
+  var url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent';
+  var body={systemInstruction:{parts:[{text:system}]},contents:[{role:'user',parts:[{text:userText}]}],
+    generationConfig:{responseMimeType:'application/json',temperature:0.5}};
+  return fetchT(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':cfg.geminiKey},body:JSON.stringify(body)},30000)
+  .then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error('Gemini HTTP '+r.status+' \u2014 '+t.slice(0,140));});return r.json();})
+  .then(function(d){
+    var text='';try{text=(d.candidates[0].content.parts||[]).map(function(p){return p.text||'';}).join('');}catch(e){}
+    text=String(text).trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+    var j=null;try{j=JSON.parse(text);}catch(e){var a=text.indexOf('{'),b=text.lastIndexOf('}');if(a>=0&&b>a){try{j=JSON.parse(text.slice(a,b+1));}catch(e2){}}}
+    if(!j)throw new Error('Respons AI bukan JSON valid.');
+    return j;
+  });
+}
+function coachSystem(sc){
+  var L=L1EN[S.l1]||'Indonesian';
+  return 'You are "English Coach", a patient, friendly English tutor for BEGINNER factory workers at a Toyota vehicle logistics plant in Indonesia (final inspection, repair/Chousa Gumi, warehouse, yard and delivery).\n'+
+  'Role-play: you are '+sc.persona+'. Situation: '+sc.ctx+'\n'+
+  'The learner\'s native language is '+L+'.\n'+
+  'Rules:\n1. Stay in the role-play. Use very simple English (A1-A2), at most 18 words, and use plant vocabulary such as: '+sc.kw.join(', ')+'.\n'+
+  '2. Judge ONLY the learner\'s last message. Find at most ONE main mistake (grammar, word choice, or unclear meaning). Ignore punctuation, capital letters and speech-recognition artifacts.\n'+
+  '3. Write "why" in '+L+': 1-2 simple sentences, no grammar jargon, so a beginner understands. If there is no mistake, "why" is an empty string.\n'+
+  '4. "better" is a natural corrected version of the learner\'s sentence in simple English. If it is already good, copy it.\n'+
+  '5. Never answer for the learner. Never leave the role-play topic.\n'+
+  '6. If it is the FINAL turn, "reply" must be a short friendly closing sentence without a question.\n'+
+  'Return ONLY one JSON object with exactly these keys: {"reply":string,"reply_l1":string (translation of reply into '+L+'),"verdict":"good"|"ok"|"fix","better":string,"why":string,"vocab":[{"en":string,"l1":string (meaning in '+L+')}] (0 to 2 useful words),"score":number 0-100}';
+}
+
+/* ---------- elemen sesi ---------- */
+function reg(t){S.texts.push(t);return S.texts.length-1;}
+function chat(){return $('lrnChat');}
+function scrollChat(){var c=chat();if(c)setTimeout(function(){c.scrollTop=c.scrollHeight;},30);}
+function addAI(text,o){
+  o=o||{};var i=reg(text);
+  var d=document.createElement('div');d.className='lrn-b ai';
+  d.innerHTML='<div class="lrn-bn">\uD83E\uDD16 '+esc(T('aiRole'))+'</div><div class="lrn-bt">'+esc(text)+'</div>'+
+   '<div class="lrn-ba"><button type="button" data-lrn="say" data-t="'+i+'">\uD83D\uDD0A '+esc(T('listen'))+'</button>'+
+   '<button type="button" data-lrn="slowsay" data-t="'+i+'">\uD83D\uDC22 '+esc(T('slow'))+'</button>'+
+   '<button type="button" data-lrn="mean" data-t="'+i+'">\uD83D\uDC41 '+esc(T('meaning'))+'</button></div>'+
+   '<div class="lrn-bm l1" id="mn'+i+'" dir="auto" style="display:none"'+(o.l1?' data-pre="1"':'')+'>'+(o.l1?esc(o.l1):'')+'</div>';
+  chat().appendChild(d);scrollChat();
+  if(o.auto&&S.voice)speak(text,false);
+  return i;
+}
+function addMe(text){
+  var d=document.createElement('div');d.className='lrn-b me';
+  d.innerHTML='<div class="lrn-bn">\uD83D\uDE4B '+esc(T('you'))+'</div><div class="lrn-bt">'+esc(text)+'</div>';
+  chat().appendChild(d);scrollChat();
+}
+function addCoach(html,cls){
+  var d=document.createElement('div');d.className='lrn-coach '+(cls||'');d.innerHTML=html;
+  chat().appendChild(d);fillTr(d);scrollChat();return d;
+}
+function addNote(text){
+  var d=document.createElement('div');d.className='lrn-note l1';d.setAttribute('dir','auto');d.textContent=text;chat().appendChild(d);scrollChat();
+}
+function setProg(){var p=$('lrnProg');if(p)p.style.width=Math.round(100*Math.min(S.idx,S.total)/Math.max(1,S.total))+'%';}
+function shuffle(n){var a=[],i;for(i=0;i<n;i++)a.push(i);for(i=n-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
+
+/* ---------- navigasi tampilan ---------- */
+function show(id,on){var e=$(id);if(e)e.style.display=on?'':'none';}
+function openLearn(){
+  var cover=$('coverPage');
+  S.from=(cover&&cover.style.display!=='none')?'cover':'lobby';
+  show('coverPage',false);show('roomLobby',false);
+  var l=$('learnApp');l.style.display='block';
+  var chipRoom=$('chipRoom');if(chipRoom){S.prevChip=chipRoom.textContent;chipRoom.textContent='\uD83C\uDF93 Learning English';}
+  primeAudio();loadUI();S.view='home';render();window.scrollTo(0,0);
+}
+function exitLearn(){
+  stopSpeak();stopListen();
+  $('learnApp').style.display='none';
+  var chipRoom=$('chipRoom');if(chipRoom)chipRoom.textContent=S.prevChip||'Lobby';
+  if(S.from==='cover'){var c=$('coverPage');c.style.display='';c.style.opacity='1';}else show('roomLobby',true);
+}
+function goBack(){
+  if(S.view==='home'){exitLearn();return;}
+  if(S.view==='scn'){S.view='home';render();return;}
+  stopSpeak();stopListen();S.view='scn';render();
+}
+function updateTop(){
+  var b=$('lrnExit');if(b)b.textContent='\u2190 '+T('back');
+  var g=$('lrnGem');if(g){g.textContent='\uD83E\uDD16 '+(hasKey()?T('gemon'):T('gemoff'));g.className='chip '+(hasKey()?'live':'warn');}
+}
+function render(){
+  updateTop();
+  if(S.view==='home')renderHome();else if(S.view==='scn')renderScn();
+  else if(S.view==='sess'){renderPanel();}
+}
+function dots(sc){var s='';for(var k=1;k<=4;k++)s+='<i class="'+(best(sc.id,k)>=60?'on':'')+'"></i>';return '<div class="lrn-dots">'+s+'</div>';}
+function renderHome(){
+  var opts=L1S.map(function(x){return '<option value="'+x[0]+'"'+(x[0]===S.l1?' selected':'')+'>'+esc(x[1])+'</option>';}).join('');
+  var h='<div class="lrn-intro"><span class="badge-soft">\uD83C\uDF93 Learning English</span><h2 class="l1" dir="auto">'+esc(T('title'))+'</h2><p class="l1" dir="auto">'+esc(T('sub'))+'</p></div>'+
+   '<div class="lrn-set"><div><label class="fld">'+esc(T('myLang'))+'</label><div class="sel"><select id="lrnL1">'+opts+'</select></div></div>'+
+   '<label class="lrn-chk"><input type="checkbox" id="lrnFree"'+(S.free?' checked':'')+'> <span class="l1" dir="auto">'+esc(T('free'))+'</span></label></div>';
+  if(!hasKey())h+='<div class="lrn-warn l1" dir="auto">\u26A0\uFE0F '+esc(T('nokey'))+' <button class="btn btn-warn btn-sm" type="button" data-act="settings">\u2699\uFE0F '+esc(T('setkey'))+'</button></div>';
+  h+='<h3 class="lrn-h l1" dir="auto">'+esc(T('pick'))+'</h3><div class="lrn-grid">'+
+   SCN.map(function(sc,i){
+     return '<button type="button" class="lrn-card" data-lrn="scn" data-i="'+i+'"><div class="lrn-card-t"><span class="lrn-ico">'+sc.ico+'</span><b>'+esc(sc.t)+'</b></div>'+
+       '<div class="lrn-card-d l1" dir="auto" data-tr="'+esc(sc.d)+'" data-id="'+esc(sc.di)+'">'+esc(sc.d)+'</div>'+dots(sc)+'</button>';
+   }).join('')+'</div>';
+  $('lrnBody').innerHTML=h;fillTr($('lrnBody'));
+}
+function renderScn(){
+  var sc=S.scn;
+  var h='<div class="lrn-intro"><div class="lrn-bigico">'+sc.ico+'</div><h2>'+esc(sc.t)+'</h2><p class="l1" dir="auto" data-tr="'+esc(sc.d)+'" data-id="'+esc(sc.di)+'">'+esc(sc.d)+'</p></div>'+
+   '<h3 class="lrn-h l1" dir="auto">'+esc(T('kw'))+'</h3><div class="lrn-kws">'+
+   sc.kw.map(function(w){return '<button type="button" class="lrn-kw" data-lrn="kw" data-w="'+esc(w)+'">\uD83D\uDD0A '+esc(w)+'</button>';}).join('')+
+   '</div><div id="lrnKwMean" class="lrn-kwm"></div><div class="lrn-stages">';
+  for(var st=1;st<=4;st++){
+    var ok=unlocked(sc,st),b=best(sc.id,st);
+    h+='<button type="button" class="lrn-stage'+(ok?'':' lock')+'" data-lrn="stage" data-st="'+st+'"'+(ok?'':' aria-disabled="true"')+'>'+
+      '<div class="lrn-st-n">'+(ok?'':'\uD83D\uDD12 ')+esc(T('s'+st))+(b?'<span class="lrn-st-b">'+b+'</span>':'')+'</div>'+
+      '<div class="lrn-st-d l1" dir="auto">'+esc(ok?T('s'+st+'d'):T('locked'))+'</div></button>';
+  }
+  h+='</div>';
+  $('lrnBody').innerHTML=h;fillTr($('lrnBody'));
+}
+function kwShow(w){
+  speak(w,false);
+  var box=$('lrnKwMean');if(!box)return;
+  box.innerHTML='<b>'+esc(w)+'</b> \u2192 <span class="l1" dir="auto" id="lrnKwTr">\u2026</span>';
+  tr(w,S.l1).then(function(o){var e=$('lrnKwTr');if(e)e.textContent=o;}).catch(function(){var e=$('lrnKwTr');if(e)e.textContent='\u2014';});
+}
+
+/* ---------- sesi ---------- */
+function startStage(st){
+  stopSpeak();stopListen();primeAudio();
+  var sc=S.scn;
+  S.stage=st;S.idx=0;S.results=[];S.texts=[];S.meanUsed=0;S.hints=3;S.busy=false;S.view='sess';
+  S.total=(st===1)?sc.s1.length:(st===2)?sc.s2.length:(st===3)?sc.s3.length:sc.q.length;
+  S.t4={hist:[],vocab:[],mist:[],scores:[]};
+  $('lrnBody').innerHTML='<div class="lrn-sh"><b>'+sc.ico+' '+esc(sc.t)+'</b><span class="chip">'+esc(T('s'+st))+'</span>'+
+    '<button type="button" class="chip btn-chip" data-lrn="voice" id="lrnVoice"></button></div>'+
+    '<div class="lrn-bar"><i id="lrnProg"></i></div><div id="lrnChat" class="lrn-chat"></div><div id="lrnLive" class="lrn-live"></div><div id="lrnPanel" class="lrn-panel"></div>';
+  updateVoiceBtn();updateTop();
+  if(st===4){
+    addNote(T('tryfree'));
+    if(!hasKey())addNote(T('nokey'));
+    S.t4.hist.push({r:'AI',t:sc.q[0]});
+    S.cur={phase:'ask'};
+    addAI(sc.q[0],{auto:true});renderPanel();
+  }else renderItem();
+  setProg();
+}
+function updateVoiceBtn(){var b=$('lrnVoice');if(b){b.textContent='\uD83D\uDD0A '+(S.voice?T('voiceon'):T('voiceoff'));b.className='chip btn-chip'+(S.voice?' live':'');}}
+function renderItem(){
+  var sc=S.scn,st=S.stage,i=S.idx;setProg();
+  var c={phase:'ask',wrong:0,best:null,picked:-1,filled:-1,order:null,item:null,target:'',said:'',mean:false};
+  S.cur=c;
+  if(st===1){c.item=sc.s1[i];c.target=c.item;if(S.voice)speak(c.target,false);}
+  else if(st===2){c.item=sc.s2[i];c.order=shuffle(c.item.o.length);addAI(c.item.q,{auto:true});}
+  else if(st===3){c.item=sc.s3[i];c.order=shuffle(c.item.w.length);}
+  renderPanel();
+}
+function sentence3(c){return c.item.t.replace('____',c.item.w[c.item.a]);}
+function micBtnHtml(){
+  return '<button type="button" class="lrn-mic'+(S.listening?' on':'')+'" data-lrn="mic">'+(S.listening?'\u23F9 '+esc(T('stop')):'\uD83C\uDFA4 '+esc(T('speak')))+'</button>';
+}
+function ctlRow(text){
+  var i=reg(text);
+  return '<div class="lrn-btns"><button type="button" data-lrn="say" data-t="'+i+'">\uD83D\uDD0A '+esc(T('listen'))+'</button>'+
+    '<button type="button" data-lrn="slowsay" data-t="'+i+'">\uD83D\uDC22 '+esc(T('slow'))+'</button>'+
+    '<button type="button" data-lrn="pmean" data-t="'+i+'">\uD83D\uDC41 '+esc(T('meaning'))+'</button></div><div class="lrn-pm l1" id="pm'+i+'" dir="auto" style="display:none"></div>';
+}
+function renderPanel(){
+  var p=$('lrnPanel');if(!p)return;
+  var st=S.stage,c=S.cur||{},sc=S.scn,h='';
+  if(st===1){
+    h='<div class="lrn-nowsay l1" dir="auto">'+esc(T('now'))+'</div><div class="lrn-target">'+(c.phase==='result'&&c.gd?diffHtml(c.gd):esc(c.target))+'</div>'+ctlRow(c.target);
+    if(c.phase==='ask')h+='<div class="lrn-row">'+micBtnHtml()+'<button type="button" class="btn btn-ghost btn-sm" data-lrn="skip">\u23ED '+esc(T('skip'))+'</button></div>';
+    else h+=resultBtns(c);
+  }else if(st===2){
+    var it=c.item;
+    h='<div class="lrn-opts">'+c.order.map(function(k){
+      var o=it.o[k],cls='lrn-opt';
+      if(c.picked===k)cls+=o[1]?' good':' sel';
+      if(c.badSet&&c.badSet[k])cls+=' bad';
+      return '<button type="button" class="'+cls+'" data-lrn="opt" data-k="'+k+'"'+((c.badSet&&c.badSet[k])||(c.picked>=0&&it.o[c.picked][1])?' disabled':'')+'><span>'+esc(o[0])+'</span><span class="lrn-os" data-lrn="optsay" data-k="'+k+'">\uD83D\uDD0A</span></button>';
+    }).join('')+'</div>';
+    var okPick=c.picked>=0&&it.o[c.picked][1];
+    if(c.phase==='ask'){
+      if(okPick)h+='<div class="lrn-row">'+micBtnHtml()+'</div>';
+      else h+='<div class="lrn-hintline l1" dir="auto">'+esc(T('pickfirst'))+'</div>';
+      h+='<div class="lrn-row"><button type="button" class="btn btn-ghost btn-sm" data-lrn="skip">\u23ED '+esc(T('skip'))+'</button></div>';
+    }else h+=resultBtns(c);
+  }else if(st===3){
+    var it3=c.item,parts=it3.t.split('____'),filled=c.filled>=0;
+    h='<div class="lrn-target">'+esc(parts[0])+'<span class="lrn-blank'+(filled?' on':'')+'">'+esc(filled?it3.w[c.filled]:'____')+'</span>'+esc(parts[1]||'')+'</div>'+
+      '<div class="lrn-opts chips">'+c.order.map(function(k){
+        var cls='lrn-chip';if(c.filled===k)cls+=' good';if(c.badSet&&c.badSet[k])cls+=' bad';
+        return '<button type="button" class="'+cls+'" data-lrn="chip" data-k="'+k+'"'+((c.badSet&&c.badSet[k])||filled?' disabled':'')+'>'+esc(it3.w[k])+'</button>';
+      }).join('')+'</div>';
+    if(filled){h+=ctlRow(sentence3(c));}
+    if(c.phase==='ask'){
+      if(filled)h+='<div class="lrn-row">'+micBtnHtml()+'</div>';
+      else h+='<div class="lrn-hintline l1" dir="auto">'+esc(T('pickfirst'))+'</div>';
+      h+='<div class="lrn-row"><button type="button" class="btn btn-ghost btn-sm" data-lrn="skip">\u23ED '+esc(T('skip'))+'</button></div>';
+    }else h+=resultBtns(c);
+  }else if(st===4){
+    var left=S.hints;
+    h='<div class="lrn-turn l1" dir="auto">'+esc(T('turn'))+' '+Math.min(S.idx+1,S.total)+' / '+S.total+'</div>';
+    if(S.idx>=S.total)h+='<div class="lrn-row"><button type="button" class="btn btn-primary" data-lrn="finish4">\uD83D\uDCCA '+esc(T('sumbtn'))+'</button></div>';
+    else if(S.busy)h+='<div class="lrn-think l1" dir="auto">\u23F3 '+esc(T('thinking'))+'</div>';
+    else{
+      h+='<div class="lrn-row">'+micBtnHtml()+'<button type="button" class="btn btn-cyan btn-sm" data-lrn="hint4">\uD83D\uDCA1 '+esc(T('hint'))+' ('+left+' '+esc(T('hintsleft'))+')</button></div>'+
+        '<div class="lrn-type"><input id="lrnType" class="txt" autocomplete="off" placeholder="'+esc(T('type'))+'"><button type="button" class="btn btn-primary btn-sm" data-lrn="send">'+esc(T('send'))+'</button></div>';
+    }
+  }
+  p.innerHTML=h;fillTr(p);
+}
+function resultBtns(c){
+  var pass=(c.best||0)>=60;
+  return '<div class="lrn-row"><button type="button" class="btn '+(pass?'btn-ghost':'btn-primary')+' btn-sm" data-lrn="retry">\uD83D\uDD04 '+esc(T('retry'))+'</button>'+
+    '<button type="button" class="btn '+(pass?'btn-primary':'btn-ghost')+' btn-sm" data-lrn="next">\u27A1\uFE0F '+esc(T('next'))+'</button></div>';
+}
+
+/* ---------- mikrofon ---------- */
+function setLive(t){var e=$('lrnLive');if(e)e.textContent=t||'';}
+function stopListen(){
+  if(S.rec){try{S.rec.onend=null;S.rec.onresult=null;S.rec.onerror=null;S.rec.stop();}catch(e){}S.rec=null;}
+  S.listening=false;setLive('');
+}
+function listen(){
+  if(S.listening){var r=S.rec;if(r){try{r.stop();}catch(e){}}return;}
+  if(!SR){toast('\uD83C\uDF99\uFE0F '+esc(T('nomic')),'bad',9000);var ti=$('lrnType');if(ti)ti.focus();return;}
+  stopSpeak();primeAudio();
+  var rec=new SR(),finalT='',interimT='',errShown=false;
+  S.rec=rec;
+  rec.lang='en-US';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+  rec.onresult=function(e){
+    interimT='';
+    for(var i=e.resultIndex||0;i<e.results.length;i++){
+      var r=e.results[i];if(!r||!r[0])continue;
+      if(r.isFinal)finalT+=(finalT?' ':'')+String(r[0].transcript||'').trim();else interimT=String(r[0].transcript||'').trim();
+    }
+    setLive('\u270D\uFE0F '+(finalT||interimT)+' \u2026');
+  };
+  rec.onerror=function(ev){
+    var er=ev&&ev.error;errShown=true;
+    if(er==='not-allowed'||er==='service-not-allowed')toast('\uD83C\uDF99\uFE0F Akses mikrofon ditolak. Klik \uD83D\uDD12 di address bar \u2192 Microphone \u2192 Allow \u2192 reload.','bad',9000);
+    else if(er==='audio-capture')toast('\uD83C\uDF99\uFE0F Mikrofon tidak ditemukan / dipakai aplikasi lain.','bad',8000);
+    else if(er==='network')toast('\uD83C\uDF10 Mesin pengenalan suara butuh internet. Periksa koneksi.','warn',7000);
+    else if(er==='no-speech')toast(esc(T('nospeech')),'warn',5000);
+    else if(er==='language-not-supported')toast('\uD83C\uDF10 Bahasa en-US tidak didukung perangkat ini.','bad',7000);
+    else errShown=false;
+  };
+  rec.onend=function(){
+    S.listening=false;S.rec=null;setLive('');
+    var said=(finalT||interimT).trim();
+    renderPanel();
+    if(said)onSaid(said);else if(!errShown)toast(esc(T('nospeech')),'warn',5000);
+  };
+  try{rec.start();S.listening=true;setLive('\uD83C\uDFA4 '+T('listening'));renderPanel();
+    setTimeout(function(){if(S.rec===rec&&S.listening){try{rec.stop();}catch(e){}}},14000);
+  }catch(e){S.rec=null;S.listening=false;toast('\u26A0\uFE0F '+esc(e.message||e),'bad');}
+}
+
+/* ---------- alur jawaban ---------- */
+function onSaid(text){
+  if(S.stage===4){turn4(text);return;}
+  var c=S.cur;if(!c||c.phase!=='ask')return;
+  var st=S.stage,target=c.target;
+  if(st===2){if(c.picked<0||!c.item.o[c.picked][1])return;target=c.item.o[c.picked][0];}
+  if(st===3){if(c.filled<0)return;target=sentence3(c);}
+  c.target=target;
+  var g=grade(target,text),sc=Math.max(0,g.score-(c.wrong||0)*15);
+  c.gd=g;c.said=text;c.phase='result';c.best=Math.max(c.best||0,sc);c.last=sc;
+  addMe(text);
+  addCoach(coach123(g,sc,text,target));
+  if(st===1||st===2||st===3)renderPanel();
+}
+function coach123(g,sc,said,target){
+  var cls=sc>=90?'great':sc>=70?'good':'low',msg=sc>=90?T('great'):sc>=70?T('good'):T('again');
+  var h='<div class="lrn-sc '+cls+'">'+sc+'</div><div class="lrn-cm l1" dir="auto">'+esc(msg)+'</div>'+
+    '<div class="lrn-df">'+diffHtml(g)+'</div><div class="lrn-sd l1" dir="auto">'+esc(T('said'))+': \u201C'+esc(said)+'\u201D</div>';
+  if(g.missing.length&&sc<100){
+    var seen={},ms=g.missing.filter(function(w){if(seen[w]||w.length<2)return false;seen[w]=1;return true;}).slice(0,3);
+    if(ms.length)h+='<div class="lrn-mis l1" dir="auto"><b>'+esc(T('miss'))+':</b> '+ms.map(function(w){return '<span class="lrn-mw"><b>'+esc(w)+'</b> \u2192 <span data-tr="'+esc(w)+'"></span></span>';}).join(' ')+'</div>';
+  }
+  if(sc<70)h+='<div class="lrn-tip l1" dir="auto">\uD83D\uDCA1 '+esc(T('tip1'))+'</div>';
+  return h;
+}
+function finishItem(skipped){
+  var c=S.cur;
+  S.results.push({score:skipped?0:(c.best||0),skip:!!skipped,miss:(c.gd&&c.gd.missing)||[],txt:c.target});
+}
+function nextItem(){
+  S.idx++;setProg();
+  if(S.idx>=S.total){endStage();return;}
+  renderItem();
+}
+function pickOpt(k){
+  var c=S.cur,it=c.item;if(c.phase!=='ask')return;
+  var o=it.o[k];c.badSet=c.badSet||{};
+  speak(o[0],false);
+  if(o[1]){c.picked=k;addCoach('<div class="lrn-cm l1" dir="auto">\u2705 '+esc(T('right'))+'</div>','good');renderPanel();}
+  else{
+    c.badSet[k]=1;c.wrong=(c.wrong||0)+1;
+    addCoach('<div class="lrn-cm l1" dir="auto">\u274C '+esc(T('wrong'))+'</div><div class="lrn-tip l1" dir="auto" data-tr="'+esc(it.n)+'"></div>','bad');
+    renderPanel();
+  }
+}
+function pickChip(k){
+  var c=S.cur,it=c.item;if(c.phase!=='ask')return;
+  c.badSet=c.badSet||{};
+  if(k===it.a){c.filled=k;addCoach('<div class="lrn-cm l1" dir="auto">\u2705 '+esc(T('filled'))+'</div>','good');renderPanel();if(S.voice)speak(sentence3(c),false);}
+  else{c.badSet[k]=1;c.wrong=(c.wrong||0)+1;addCoach('<div class="lrn-cm l1" dir="auto">\u274C '+esc(T('wrongw'))+'</div>','bad');renderPanel();}
+}
+
+/* ---------- tahap 4: obrolan bebas ---------- */
+function histText(){return S.t4.hist.map(function(x){return x.r+': '+x.t;}).join('\n');}
+function turn4(text){
+  if(S.busy)return;
+  var sc=S.scn,n=S.idx+1,last=(n>=S.total);
+  S.busy=true;addMe(text);S.t4.hist.push({r:'Learner',t:text});renderPanel();
+  function advance(replyText,l1){
+    S.busy=false;S.idx++;setProg();
+    if(replyText){if(!last)S.t4.hist.push({r:'AI',t:replyText});addAI(replyText,{auto:true,l1:l1});}
+    renderPanel();
+  }
+  if(!hasKey()){
+    addCoach('<div class="lrn-cm l1" dir="auto">\u2139\uFE0F '+esc(T('basic'))+'</div>','warn');
+    S.results.push({score:null,txt:text});
+    advance(last?'':sc.q[Math.min(S.idx+1,sc.q.length-1)],'');
+    return;
+  }
+  var prompt='Conversation so far:\n'+histText()+'\n\nLearner\'s new message: "'+text.replace(/"/g,'\'')+'"\nTurn '+n+' of '+S.total+'.'+(last?' This is the FINAL turn.':'');
+  gem(coachSystem(sc),prompt).then(function(j){
+    var reply=String(j.reply||'').trim(),score=Math.max(0,Math.min(100,Math.round(Number(j.score)||0)));
+    var verdict=j.verdict==='good'?'good':j.verdict==='ok'?'ok':'fix';
+    var better=String(j.better||'').trim(),why=String(j.why||'').trim();
+    var h='<div class="lrn-sc '+(score>=85?'great':score>=65?'good':'low')+'">'+score+'</div>';
+    if(better&&normWord(better)!==normWord(text)&&better.toLowerCase().replace(/[^a-z0-9 ]/g,'')!==text.toLowerCase().replace(/[^a-z0-9 ]/g,''))
+      h+='<div class="lrn-bet"><b>'+esc(T('better'))+':</b> <span class="lrn-bt2">'+esc(better)+'</span> <button type="button" class="lrn-mini" data-lrn="saytxt" data-t="'+reg(better)+'">\uD83D\uDD0A</button></div>';
+    else h+='<div class="lrn-cm l1" dir="auto">'+esc(verdict==='good'?T('great'):T('good'))+'</div>';
+    if(why)h+='<div class="lrn-tip l1" dir="auto">\uD83D\uDCA1 <b>'+esc(T('why'))+':</b> '+esc(why)+'</div>';
+    var vs=(Array.isArray(j.vocab)?j.vocab:[]).slice(0,2).filter(function(v){return v&&v.en;});
+    if(vs.length){
+      h+='<div class="lrn-mis l1" dir="auto"><b>'+esc(T('newwords'))+':</b> '+vs.map(function(v){return '<span class="lrn-mw"><b>'+esc(v.en)+'</b> \u2192 '+esc(v.l1||'')+'</span>';}).join(' ')+'</div>';
+      vs.forEach(function(v){S.t4.vocab.push({en:String(v.en),l1:String(v.l1||'')});});
+    }
+    addCoach(h,verdict);
+    if(why)S.t4.mist.push(why);
+    S.results.push({score:score,txt:text});
+    advance(reply,String(j.reply_l1||''));
+  }).catch(function(e){
+    S.t4.hist.pop();S.busy=false;renderPanel();
+    if(e&&e.message==='nokey')toast(esc(T('nokey')),'warn',9000);
+    else addCoach('<div class="lrn-cm l1" dir="auto">\u26A0\uFE0F '+esc(T('aifail'))+'<br><small>'+esc(e&&e.message||'')+'</small></div>','bad');
+  });
+}
+function hint4(){
+  if(S.busy)return;
+  if(S.hints<=0){toast(esc(T('hintnone')),'warn');return;}
+  S.hints--;var sc=S.scn,fb=sc.fr[Math.min(S.idx,sc.fr.length-1)];
+  function showHint(frame,tipText){
+    var h='<div class="lrn-hintbox"><b>\uD83D\uDCA1 '+esc(T('frame'))+':</b> <span class="lrn-bt2">'+esc(frame)+'</span>'+(tipText?'<div class="l1" dir="auto" style="margin-top:4px">'+esc(tipText)+'</div>':'')+'</div>';
+    addCoach(h,'warn');renderPanel();
+  }
+  if(!hasKey()){showHint(fb,'');return;}
+  S.busy=true;renderPanel();
+  var L=L1EN[S.l1]||'Indonesian';
+  var sys='You are "English Coach" for beginner factory workers. Return ONLY JSON: {"frame":string,"tip":string}. "frame" is ONE short English sentence frame with blanks (___) that a beginner can complete to answer the AI\'s last line (max 12 words). "tip" is one short helpful tip in '+L+' (max 15 words).';
+  gem(sys,'Role-play: '+S.scn.ctx+'\nConversation so far:\n'+histText()+'\n\nGive a sentence frame for the learner\'s next answer.').then(function(j){
+    S.busy=false;showHint(String(j.frame||fb),String(j.tip||''));
+  }).catch(function(){S.busy=false;showHint(fb,'');});
+}
+
+/* ---------- ringkasan tahap ---------- */
+function endStage(){
+  stopSpeak();stopListen();
+  var sc=S.scn,st=S.stage,rs=S.results,sum=0,cnt=0,i;
+  rs.forEach(function(r){if(r.score!=null){sum+=r.score;cnt++;}});
+  var avg=cnt?Math.round(sum/cnt):0;
+  var passed=cnt>0&&avg>=60;
+  if(cnt)saveBest(sc.id,st,avg);
+  var missAgg={};rs.forEach(function(r){(r.miss||[]).forEach(function(w){if(w&&w.length>1)missAgg[w]=(missAgg[w]||0)+1;});});
+  var top=Object.keys(missAgg).sort(function(a,b){return missAgg[b]-missAgg[a];}).slice(0,5);
+  var skipped=rs.filter(function(r){return r.skip;}).length;
+  var h='<div class="lrn-sum"><div class="lrn-ring '+(avg>=85?'great':avg>=60?'good':'low')+'"><b>'+(cnt?avg:'\u2014')+'</b><span>/100</span></div>'+
+    '<h3 class="l1" dir="auto">'+esc(T('topicdone'))+' \u00B7 '+esc(T('s'+st))+'</h3>'+
+    '<div class="lrn-kv l1" dir="auto"><span>'+esc(T('done'))+': <b>'+rs.length+'</b></span><span>'+esc(T('avg'))+': <b>'+(cnt?avg:'\u2014')+'</b></span>'+
+    (skipped?'<span>'+esc(T('skipped'))+': <b>'+skipped+'</b></span>':'')+'<span>'+esc(T('meanused'))+': <b>'+S.meanUsed+'</b></span></div>';
+  var vocabList=[];
+  if(st===4){S.t4.vocab.forEach(function(v){vocabList.push({en:v.en,l1:v.l1});});}
+  top.forEach(function(w){vocabList.push({en:w,l1:null});});
+  if(vocabList.length){
+    h+='<div class="lrn-rev l1" dir="auto"><b>'+esc(T('newwords'))+':</b><div class="lrn-revl">'+
+      vocabList.slice(0,8).map(function(v){return '<span class="lrn-mw"><b>'+esc(v.en)+'</b> \u2192 '+(v.l1!=null?esc(v.l1):'<span data-tr="'+esc(v.en)+'"></span>')+'</span>';}).join('')+'</div></div>';
+  }
+  if(st===4&&S.t4.mist.length)h+='<div class="lrn-rev l1" dir="auto"><b>\uD83D\uDCA1 '+esc(T('why'))+':</b><ul>'+S.t4.mist.slice(0,4).map(function(m){return '<li>'+esc(m)+'</li>';}).join('')+'</ul></div>';
+  h+='<div class="lrn-ns l1" dir="auto"><b>'+esc(T('nextstep'))+':</b> '+esc(st<4?(passed?T('unlocked'):T('again2')):T('great'))+'</div>'+
+    '<div class="lrn-row"><button type="button" class="btn btn-ghost btn-sm" data-lrn="repeatstage">\uD83D\uDD01 '+esc(T('repeat'))+'</button>'+
+    (st<4&&(passed||S.free)?'<button type="button" class="btn btn-primary btn-sm" data-lrn="nextstage">\u27A1\uFE0F '+esc(T('nextstage'))+'</button>':'')+
+    '<button type="button" class="btn btn-cyan btn-sm" data-lrn="copysum">\uD83D\uDCCB '+esc(T('copy'))+'</button>'+
+    '<button type="button" class="btn btn-ghost btn-sm" data-lrn="topics">\uD83C\uDFE0 '+esc(T('topics'))+'</button></div></div>';
+  S.sumText=sc.t+' \u2014 '+T('s'+st)+'\n'+T('avg')+': '+(cnt?avg:'-')+'/100\n'+vocabList.map(function(v){return '- '+v.en+(v.l1?' = '+v.l1:'');}).join('\n');
+  var p=$('lrnPanel');if(p){p.innerHTML=h;fillTr(p);}
+  var pg=$('lrnProg');if(pg)pg.style.width='100%';
+  scrollChat();
+}
+function copySum(){
+  var t=S.sumText||'';
+  function fb(){try{var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.left='-9999px';document.body.appendChild(ta);ta.focus();ta.select();document.execCommand('copy');ta.remove();return true;}catch(e){return false;}}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast(esc(T('copied')),'ok');}).catch(function(){if(fb())toast(esc(T('copied')),'ok');});
+  else if(fb())toast(esc(T('copied')),'ok');
+}
+
+/* ---------- event ---------- */
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-lrn]');if(!el||el.hasAttribute('disabled'))return;
+  var a=el.getAttribute('data-lrn');
+  try{
+    if(a==='open')openLearn();
+    else if(a==='back')goBack();
+    else if(a==='scn'){S.scn=SCN[parseInt(el.getAttribute('data-i'),10)];S.view='scn';render();window.scrollTo(0,0);}
+    else if(a==='kw')kwShow(el.getAttribute('data-w'));
+    else if(a==='stage'){var st=parseInt(el.getAttribute('data-st'),10);if(!unlocked(S.scn,st)){toast('\uD83D\uDD12 '+esc(T('locked')),'warn',5000);return;}startStage(st);window.scrollTo(0,0);}
+    else if(a==='say'||a==='saytxt'){var t=S.texts[parseInt(el.getAttribute('data-t'),10)];if(t){primeAudio();speak(t,false);}}
+    else if(a==='slowsay'){var t2=S.texts[parseInt(el.getAttribute('data-t'),10)];if(t2){primeAudio();speak(t2,true);}}
+    else if(a==='mean'||a==='pmean'){
+      var i=parseInt(el.getAttribute('data-t'),10),box=$((a==='mean'?'mn':'pm')+i);if(!box)return;
+      if(box.style.display==='block'){box.style.display='none';return;}
+      box.style.display='block';
+      if(!box.getAttribute('data-c')){box.setAttribute('data-c','1');S.meanUsed++;}
+      if(!box.textContent){box.textContent='\u2026';tr(S.texts[i],S.l1).then(function(o){box.textContent=o;}).catch(function(){box.textContent='\u2014';});}
+    }
+    else if(a==='voice'){S.voice=!S.voice;if(!S.voice)stopSpeak();saveLC();updateVoiceBtn();}
+    else if(a==='mic')listen();
+    else if(a==='skip'){stopSpeak();stopListen();S.cur.best=S.cur.best||0;finishItem(true);nextItem();}
+    else if(a==='retry'){stopListen();var c=S.cur;c.phase='ask';c.gd=null;renderPanel();if(S.stage===1&&S.voice)speak(c.target,false);}
+    else if(a==='next'){stopSpeak();stopListen();finishItem(false);nextItem();}
+    else if(a==='opt')pickOpt(parseInt(el.getAttribute('data-k'),10));
+    else if(a==='optsay'){e.stopPropagation();var oo=S.cur.item.o[parseInt(el.getAttribute('data-k'),10)];if(oo){primeAudio();speak(oo[0],false);}}
+    else if(a==='chip')pickChip(parseInt(el.getAttribute('data-k'),10));
+    else if(a==='send'){var ti=$('lrnType');var v=ti?ti.value.trim():'';if(v){ti.value='';stopSpeak();onSaid(v);}}
+    else if(a==='hint4')hint4();
+    else if(a==='repeatstage')startStage(S.stage);
+    else if(a==='nextstage')startStage(S.stage+1);
+    else if(a==='topics'){stopSpeak();S.view='home';render();window.scrollTo(0,0);}
+    else if(a==='copysum')copySum();
+    else if(a==='finish4')endStage();
+  }catch(err){toast('\u26A0\uFE0F '+esc(err.message||err),'bad',7000);}
+});
+document.addEventListener('change',function(e){
+  if(e.target&&e.target.id==='lrnL1'){S.l1=e.target.value;saveLC();loadUI();render();}
+  else if(e.target&&e.target.id==='lrnFree'){S.free=!!e.target.checked;saveLC();}
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&e.target&&e.target.id==='lrnType'){e.preventDefault();var v=e.target.value.trim();if(v){e.target.value='';stopSpeak();onSaid(v);}}
+});
+var lastKeyState=hasKey();
+setInterval(function(){
+  var la=$('learnApp');if(!la||la.style.display==='none')return;
+  var k=hasKey();if(k===lastKeyState)return;lastKeyState=k;
+  if(S.view==='home')render();else updateTop();
+},1500);
+if('speechSynthesis' in window){try{window.speechSynthesis.getVoices();window.speechSynthesis.addEventListener('voiceschanged',function(){});}catch(e){}}
 })();
 </script>
 </body>
